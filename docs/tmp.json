@@ -1,0 +1,84 @@
+{
+  "version": "1.0",
+  "use_ps_color": true,
+  "ui": {
+    "hide_native_ui": true
+  },
+  "reference": {
+    "prefix": "TORCH",
+    "segments": ["{shape}", "W{width}", "H{height}", "{material}", "{color}"],
+    "use_hash": false,
+    "hash_len": 8
+  },
+  "pricing": {
+    "base_price_m2": 12.5,
+    "rounding": 2
+  },
+  "weights": {
+    "tare_weight": 0.05
+  },
+  "shape_factor": {
+    "SQR": 1.0,
+    "RECT": 1.0,
+    "TRI": 0.5
+  },
+  "constraints": {
+    "SQR": { "side": { "min": 10, "max": 150, "step": 1 } },
+    "RECT": {
+      "width":  { "min": 10, "max": 200, "step": 1 },
+      "height": { "min": 10, "max": 200, "step": 1 }
+    },
+    "TRI": {
+      "width":  { "min": 10, "max": 200, "step": 1 },
+      "height": { "min": 10, "max": 200, "step": 1 }
+    }
+  },
+  "materials": {
+    "COT": {
+      "label": "Coton",
+      "coeff": 1.0,
+      "weight_m2": 0.18,
+      "color_group_id": 17,
+      "color_map": {
+        "C1": { "label": "Blanc",   "id_attribute": 201, "hex": "#F2F2F2", "coeff": 1.00 },
+        "C2": { "label": "Ivoire",  "id_attribute": 202, "hex": "#F2EDE4", "coeff": 1.00 },
+        "C3": { "label": "Sable",   "id_attribute": 203, "hex": "#D8C3A5", "coeff": 1.02 },
+        "C4": { "label": "Ardoise", "id_attribute": 204, "hex": "#4B5563", "coeff": 1.05 },
+        "C5": { "label": "Marine",  "id_attribute": 205, "hex": "#2F6C8F", "coeff": 1.05 },
+        "C6": { "label": "Noir",    "id_attribute": 206, "hex": "#111827", "coeff": 1.07 }
+      }
+    },
+    "LIN": {
+      "label": "Lin",
+      "coeff": 1.2,
+      "weight_m2": 0.22,
+      "color_group_id": 18,
+      "color_map": {
+        "L1": { "label": "Naturel",   "id_attribute": 301, "hex": "#D7C8B6", "coeff": 1.02 },
+        "L2": { "label": "Grège",     "id_attribute": 302, "hex": "#B9B1A8", "coeff": 1.04 },
+        "L3": { "label": "Anthracite","id_attribute": 303, "hex": "#2F3133", "coeff": 1.07 }
+      }
+    },
+    "MIC": {
+      "label": "Microfibre",
+      "coeff": 0.9,
+      "weight_m2": 0.14,
+      "color_group_id": 19,
+      "color_map": {
+        "M1": { "label": "Blanc", "id_attribute": 401, "hex": "#FFFFFF", "coeff": 1.00 },
+        "M2": { "label": "Bleu",  "id_attribute": 402, "hex": "#3B82F6", "coeff": 1.00 }
+      }
+    }
+  },
+  "airflow": {
+    "enabled": false,
+    "min": 0,
+    "max": 100,
+    "default": 50,
+    "coeff_perc": 1.0
+  },
+  "textures": {
+    "use_ps_texture_if_available": true,
+    "ps_texture_path_pattern": "/img/co/{id_attribute}.jpg"
+  }
+}

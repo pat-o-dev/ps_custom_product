@@ -64,25 +64,54 @@ class Ps_custom_product extends Module
     
     private function installTab()
     {
-        $tab = new Tab();
-        $tab->active = 1;
-        $tab->class_name = 'AdminPsCustomProduct';
-        $tab->name = [];
+        $parent = new Tab();
+        $parent->active = 1;
+        $parent->class_name = 'AdminPsCustomProduct';
+        $parent->name = [];
         foreach (Language::getLanguages(true) as $lang) {
-            $tab->name[$lang['id_lang']] = 'Custom Product';
+            $parent->name[$lang['id_lang']] = 'PS Custom Product';
         }
-        $tab->id_parent = (int)Tab::getIdFromClassName('AdminParentThemes');
-        $tab->module = $this->name;
-        return $tab->add();
+        $parent->id_parent = (int)Tab::getIdFromClassName('AdminCatalog');
+        $parent->module = $this->name;
+        $parent->add();
+        $children = [
+            'AdminPsCustomProductProducts'  => 'Produits configurables',
+            'AdminPsCustomProductShapes'    => 'Formes & dimensions',
+            'AdminPsCustomProductMaterials'    => 'Matières & Couleurs',
+        ];
+        foreach ($children as $class => $label) {
+            $tab = new Tab();
+            $tab->active = 1;
+            $tab->class_name = $class;
+            $tab->id_parent = (int)$parent->id;
+            $tab->module = $this->name;
+            foreach (Language::getLanguages(true) as $lang) {
+                $tab->name[$lang['id_lang']] = $label;
+            }
+            $tab->add();
+        }
+
+    return true;
+
     }
 
     private function uninstallTab()
     {
-        $id_tab = (int)Tab::getIdFromClassName('AdminPsCustomProduct');
-        if ($id_tab) {
-            $tab = new Tab($id_tab);
-            return $tab->delete();
+        $classes = [
+            'AdminPsCustomProduct',
+            'AdminPsCustomProductProducts',
+            'AdminPsCustomProductShapes',
+            'AdminPsCustomProductMaterials',
+        ];
+
+        foreach ($classes as $class) {
+            $id = (int)Tab::getIdFromClassName($class);
+            if ($id) {
+                $tab = new Tab($id);
+                $tab->delete();
+            }
         }
+
         return true;
     }
 
@@ -92,5 +121,12 @@ class Ps_custom_product extends Module
             return $this->fetch('module:ps_custom_product/views/templates/hook/customize_product.tpl');
         }
         return null; 
+    }
+
+    public function getContent()
+    {
+        Tools::redirectAdmin(
+            $this->context->link->getAdminLink('AdminPsCustomProduct')
+        );
     }
 }

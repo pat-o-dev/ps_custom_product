@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<module>
+	<name>ps_custom_product</name>
+	<displayName><![CDATA[Custom Product]]></displayName>
+	<version><![CDATA[1.0.1]]></version>
+	<description><![CDATA[Add Custom Product on your website]]></description>
+	<author><![CDATA[PatrickGenitrini]]></author>
+	<tab><![CDATA[front_office_features]]></tab>
+	<is_configurable>1</is_configurable>
+	<need_instance>1</need_instance>
+</module>

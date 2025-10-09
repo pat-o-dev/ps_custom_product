@@ -21,8 +21,8 @@ class AdminPsCustomProductShapesController extends ModuleAdminController
                 'enabled' => true,
                 'factor' => 1.0,
                 'fields' => [
-                    'width'  => ['min'=>10, 'max'=>200, 'step'=>1],
-                    'height' => ['min'=>10, 'max'=>200, 'step'=>1],
+                    'ab'  => ['min'=>10, 'max'=>200, 'step'=>1, 'default' => 50],
+                    'bc' => ['min'=>10, 'max'=>200, 'step'=>1, 'default' => 50],
                 ],
                 'air' => ['min_m2'=>0.1, 'max_m2'=>1.9],
             ],
@@ -31,7 +31,7 @@ class AdminPsCustomProductShapesController extends ModuleAdminController
                 'enabled' => true,
                 'factor' => 1.0,
                 'fields' => [
-                    'side' => ['min'=>10, 'max'=>150, 'step'=>1],
+                    'ab' => ['min'=>10, 'max'=>150, 'step'=>1, 'default' => 50],
                 ],
                 'air' => ['min_m2'=>0.1, 'max_m2'=>2.0],
             ],
@@ -40,9 +40,9 @@ class AdminPsCustomProductShapesController extends ModuleAdminController
                 'enabled' => false,
                 'factor' => 0.5,
                 'fields' => [
-                    'ab' => ['min'=>10, 'max'=>200, 'step'=>1],
-                    'bc' => ['min'=>10, 'max'=>200, 'step'=>1],
-                    'ca' => ['min'=>10, 'max'=>200, 'step'=>1],
+                    'ab' => ['min'=>10, 'max'=>200, 'step'=>1, 'default' => 50],
+                    'bc' => ['min'=>10, 'max'=>200, 'step'=>1, 'default' => 50],
+                    'ca' => ['min'=>10, 'max'=>200, 'step'=>1, 'default' => 50],
                 ],
                 'air' => ['min_m2'=>0.1, 'max_m2'=>1.9],
             ],
@@ -123,6 +123,7 @@ class AdminPsCustomProductShapesController extends ModuleAdminController
                             'min'  => $this->nf($f['min']  ?? 0),
                             'max'  => $this->nf($f['max']  ?? 0),
                             'step' => $this->nf($f['step'] ?? 1),
+                            'default' => $this->nf($f['default'] ?? 0),
                         ];
                     }
                 } elseif (!empty($existing[$code]['fields']) && is_array($existing[$code]['fields'])) {

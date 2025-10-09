@@ -131,14 +131,15 @@ class Ps_custom_product extends Module
         if(in_array($id_product, $ids_product)) {
             $id_lang = (int) $this->context->language->id;
             
-            $shapes = json_decode(Configuration::get('PCP_SHAPES'), true);
-            $materials = json_decode(Configuration::get('PCP_MATERIALS'), true);
+            $shapes = json_decode(Configuration::get('PCP_SHAPES', '{}'), true);
+            $materials = json_decode(Configuration::get('PCP_MATERIALS', '{}'), true);
             $colors = [];
             foreach($materials as &$material) {
                 $material['colors'] = $colors[$material['color_group_id']] ?? $this->getColorsByGroup($material['color_group_id'], $id_lang);   
             }
 
             $this->context->smarty->assign([
+                'id_product' => $id_product,
                 'shapes' => $shapes,
                 'materials' => $materials,
             ]);

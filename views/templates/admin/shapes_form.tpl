@@ -21,17 +21,21 @@
         {foreach $shape.fields as $fname => $f}
           <div class="row" style="margin-bottom:6px;">
             <div class="col-md-2"><strong>{$fname}</strong></div>
-            <div class="col-md-3">
+            <div class="col-md-2">
               <input class="form-control" type="text" name="PCP_SHAPES[{$code}][fields][{$fname}][min]" value="{$f.min}">
               <small>{l s='min' mod='ps_custom_product'}</small>
             </div>
-            <div class="col-md-3">
+            <div class="col-md-2">
               <input class="form-control" type="text" name="PCP_SHAPES[{$code}][fields][{$fname}][max]" value="{$f.max}">
               <small>{l s='max' mod='ps_custom_product'}</small>
             </div>
-            <div class="col-md-3">
+            <div class="col-md-2">
               <input class="form-control" type="text" name="PCP_SHAPES[{$code}][fields][{$fname}][step]" value="{$f.step}">
               <small>{l s='pas' mod='ps_custom_product'}</small>
+            </div>
+            <div class="col-md-2">
+              <input class="form-control" type="text" name="PCP_SHAPES[{$code}][fields][{$fname}][default]" value="{$f.default}">
+              <small>{l s='default' mod='ps_custom_product'}</small>
             </div>
           </div>
         {/foreach}

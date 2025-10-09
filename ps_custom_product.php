@@ -53,13 +53,21 @@ class Ps_custom_product extends Module
     {
         return parent::install()
             && $this->registerHook('displayAfterProductThumbs')
-            && $this->installTab();
+            && $this->installTab()
+            && Configuration::updateValue('PCP_CONFIG_PRODUCTS', '')
+            && Configuration::updateValue('PCP_PRODUCT_SETTINGS', '')
+            && Configuration::updateValue('PCP_MATERIALS', '')
+            && Configuration::updateValue('PCP_SHAPES', '');
     }
 
     public function uninstall()
     {
         return parent::uninstall()
-            && $this->uninstallTab();
+            && $this->uninstallTab()
+            && Configuration::deleteByName('PCP_CONFIG_PRODUCTS')
+            && Configuration::deleteByName('PCP_PRODUCT_SETTINGS')
+            && Configuration::deleteByName('PCP_MATERIALS')
+            && Configuration::deleteByName('PCP_SHAPES');
     }
     
     private function installTab()
@@ -77,7 +85,7 @@ class Ps_custom_product extends Module
         $children = [
             'AdminPsCustomProductProducts'  => 'Produits configurables',
             'AdminPsCustomProductShapes'    => 'Formes & dimensions',
-            'AdminPsCustomProductMaterials'    => 'Matières & Couleurs',
+            'AdminPsCustomProductMaterials' => 'Matières & Couleurs',
         ];
         foreach ($children as $class => $label) {
             $tab = new Tab();
@@ -91,7 +99,7 @@ class Ps_custom_product extends Module
             $tab->add();
         }
 
-    return true;
+        return true;
 
     }
 
@@ -117,8 +125,24 @@ class Ps_custom_product extends Module
 
     public function hookDisplayAfterProductThumbs($params) {
         $id_product = $params['product']['id'];
-        if($id_product == 20) {
-            return $this->fetch('module:ps_custom_product/views/templates/hook/customize_product.tpl');
+        if (!$id_product) return;
+        
+        $ids_product = array_map('intval',explode(',', (string) Configuration::get('PCP_CONFIG_PRODUCTS')));
+        if(in_array($id_product, $ids_product)) {
+            $id_lang = (int) $this->context->language->id;
+            
+            $shapes = json_decode(Configuration::get('PCP_SHAPES'), true);
+            $materials = json_decode(Configuration::get('PCP_MATERIALS'), true);
+            $colors = [];
+            foreach($materials as &$material) {
+                $material['colors'] = $colors[$material['color_group_id']] ?? $this->getColorsByGroup($material['color_group_id'], $id_lang);   
+            }
+
+            $this->context->smarty->assign([
+                'shapes' => $shapes,
+                'materials' => $materials,
+            ]);
+            return $this->context->smarty->fetch('module:ps_custom_product/views/templates/hook/customize_product.tpl');
         }
         return null; 
     }
@@ -128,5 +152,19 @@ class Ps_custom_product extends Module
         Tools::redirectAdmin(
             $this->context->link->getAdminLink('AdminPsCustomProduct')
         );
+    }
+
+    public function getColorsByGroup($id_group, $id_lang)
+    {
+        $sql = new DbQuery();
+        $sql->select('a.id_attribute, al.name, a.color');
+        $sql->from('attribute', 'a');
+        $sql->innerJoin('attribute_lang', 'al', 'a.id_attribute = al.id_attribute AND al.id_lang = ' . $id_lang);
+        $sql->where('a.id_attribute_group = ' . (int) $id_group);
+        $sql->orderBy('al.name ASC');
+
+        $colors = Db::getInstance()->executeS($sql);
+
+        return $colors ?: [];
     }
 }

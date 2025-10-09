@@ -7,5 +7,4 @@
 {else}
 {/if}
 
-{include file="module:ps_custom_product/views/templates/hook/_partials/styles.tpl"}
 {include file="module:ps_custom_product/views/templates/hook/_partials/scripts.tpl"}

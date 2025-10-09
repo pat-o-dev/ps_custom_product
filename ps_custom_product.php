@@ -52,6 +52,7 @@ class Ps_custom_product extends Module
     public function install()
     {
         return parent::install()
+            && $this->registerHook('header')
             && $this->registerHook('displayAfterProductThumbs')
             && $this->installTab()
             && Configuration::updateValue('PCP_CONFIG_PRODUCTS', '')
@@ -121,6 +122,32 @@ class Ps_custom_product extends Module
         }
 
         return true;
+    }
+
+    public function hookHeader($params)
+    {
+        if ($this->context->controller && $this->context->controller->php_self === 'product') {
+            // JS
+           /* $this->context->controller->registerJavascript(
+                'pscp-front-js',
+                'modules/'.$this->name.'/views/js/ps_custom_product.js',
+                [
+                    'position'   => 'bottom',
+                    'priority'   => 150,
+                    'attributes' => 'defer',
+                ]
+            );*/
+
+            // (Optionnel) CSS
+            $this->context->controller->registerStylesheet(
+                'pscp-front-css',
+                'modules/'.$this->name.'/views/css/ps_custom_product.css',
+                [
+                    'media'    => 'all',
+                    'priority' => 150,
+                ]
+            );
+        }
     }
 
     public function hookDisplayAfterProductThumbs($params) {

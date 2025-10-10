@@ -2,8 +2,8 @@
     <button
       id="get-custom-product"
       class="btn btn-primary"
-      data-button-action=""
-      type="submit"
+      type="button"
+      onclick="pcpQuote()"
     >
       <i class="material-icons"></i>
       {l s='Calculer le tarif' mod='ps_custom_product'}
@@ -16,7 +16,7 @@
     style="font-size: 1.4em; font-weight: bold"
   ></div>
   <div id="add-to-cart-container" class="mt-2" style="display: none">
-    <button id="add-custom-product" class="btn btn-success">
+    <button id="add-custom-product" class="btn btn-success" onclick="pcpAddToCart()">
       <i class="material-icons"></i>
       {l s='Ajouter au panier' mod='ps_custom_product'}
     </button>

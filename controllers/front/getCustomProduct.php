@@ -3,11 +3,10 @@ use PrestaShop\PrestaShop\Adapter\Product\PriceFormatter;
 
 class Ps_Custom_ProductGetCustomProductModuleFrontController extends ModuleFrontController
 {
-    
-    
     public function initContent()
     {
         parent::initContent();
+        
         header('Content-Type: application/json; charset=utf-8');
 
         try {
@@ -90,13 +89,14 @@ class Ps_Custom_ProductGetCustomProductModuleFrontController extends ModuleFront
                 }
 
                 $id_attribute = $this->getAttribute($id_attribute_group, $label );
+           
                 $id_product_attribute = $this->getProductAttribute($id_product, $id_attribute, $weightKgTotal);
-
+            
                 Db::getInstance()->delete(
                     'specific_price',
                     'id_product='.(int)$id_product.' AND id_product_attribute='.(int)$id_product_attribute
                 );
-
+   
                 $sp = new SpecificPrice();
                 $sp->id_product           = (int)$id_product;
                 $sp->id_product_attribute = (int)$id_product_attribute;
@@ -105,20 +105,21 @@ class Ps_Custom_ProductGetCustomProductModuleFrontController extends ModuleFront
                 $sp->id_country           = 0;
                 $sp->id_group             = 0;
                 $sp->id_customer          = 0;
-                $sp->price                = (float)$priceHt; // PRIX HT FINAL
+                $sp->price                = Tools::ps_round($priceHt, 3); // PRIX HT FINAL
                 $sp->from_quantity        = 1;
                 $sp->reduction            = 0;
                 $sp->reduction_type       = 'amount';
                 $sp->from                 = '0000-00-00 00:00:00';
                 $sp->to                   = '0000-00-00 00:00:00';
                 $sp->add();
-
+   
                 StockAvailable::setProductOutOfStock((int)$id_product, 1);
                 Product::flushPriceCache();
 
                 if (!$id_product_attribute) {
                     throw new Exception($this->trans('Impossible d’ajouter au panier.', [], 'Modules.ps_custom_product.Front'));
                 }
+                
                 if (!$this->context->cart->id) {
                     $this->context->cart->add();
                     $this->context->cookie->id_cart = (int)$this->context->cart->id;
@@ -136,14 +137,16 @@ class Ps_Custom_ProductGetCustomProductModuleFrontController extends ModuleFront
                 if (!$ok) {
                     throw new Exception($this->trans('Impossible d’ajouter au panier.', [], 'Modules.ps_custom_product.Front'));
                 }
+
                 die(json_encode([
                     'success' => true,
                     'action'  => 'add',
                     'id_product' => $id_product,
-                    'id_product_attribute' => $id_product_attribute
-                ]));
-            }
+                    'id_product_attribute' => $id_product_attribute,
 
+                ]));
+
+            }
         } catch (Exception $e) {
             http_response_code(400);
             die(json_encode([
@@ -165,13 +168,13 @@ class Ps_Custom_ProductGetCustomProductModuleFrontController extends ModuleFront
             HAVING GROUP_CONCAT(pac.id_attribute ORDER BY pac.id_attribute SEPARATOR ",") = "'.pSQL((string)$id_attribute).'"'
         );
 
-        // créer la combinaison si absente (impact=0, on utilisera SpecificPrice en prix final)
+
         if (!$id_product_attribute) {
             // product_attribute
             Db::getInstance()->insert('product_attribute', [
                 'id_product'     => (int)$id_product,
                 'reference'      => '',        // #TODO SKU
-                'price'          => 0,         // impact HT = 0 (on fixe le prix via SpecificPrice)
+                'price'          => 0,         // impact HT = 0 use SpecificPrice
                 'weight'         => (float)$weightKgTotal,
                 'default_on'     => null,
                 'available_date' => null,
@@ -217,7 +220,7 @@ class Ps_Custom_ProductGetCustomProductModuleFrontController extends ModuleFront
         if($id_attribute > 0) {
             return $id_attribute;
         }       
-        // Sinon, on la crée (attribute, attribute_lang pour TOUTES les langues, attribute_shop)
+       
         $result = Db::getInstance()->insert('attribute', [
             'id_attribute_group' => $id_attribute_group,
             'color'              => '',

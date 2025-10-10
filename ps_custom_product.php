@@ -128,7 +128,7 @@ class Ps_custom_product extends Module
     {
         if ($this->context->controller && $this->context->controller->php_self === 'product') {
             // JS
-           /* $this->context->controller->registerJavascript(
+            $this->context->controller->registerJavascript(
                 'pscp-front-js',
                 'modules/'.$this->name.'/views/js/ps_custom_product.js',
                 [
@@ -136,8 +136,7 @@ class Ps_custom_product extends Module
                     'priority'   => 150,
                     'attributes' => 'defer',
                 ]
-            );*/
-
+            );
             // (Optionnel) CSS
             $this->context->controller->registerStylesheet(
                 'pscp-front-css',
@@ -165,6 +164,7 @@ class Ps_custom_product extends Module
                 $material['colors'] = $colors[$material['color_group_id']] ?? $this->getColorsByGroup($material['color_group_id'], $id_lang);   
             }
 
+            
             $this->context->smarty->assign([
                 'id_product' => $id_product,
                 'shapes' => $shapes,

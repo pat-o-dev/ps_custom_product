@@ -1,26 +1,26 @@
-  body.custom_product_page .product-actions,
-  body.custom_product_page .js-product-actions,
-  body.custom_product_page .product-prices,
-  body.custom_product_page .js-product-prices {
+  body.custom-product-page .product-actions,
+  body.custom-product-page .js-product-actions,
+  body.custom-product-page .product-prices,
+  body.custom-product-page .js-product-prices {
     display: none;
   }
-  body.custom_product_page #pcp-main-content {
+  body.custom-product-page #pcp-main-content {
     background-color: #cccccc;
   }
-  body.custom_product_page .pcp-shade-fields {
+  body.custom-product-page .pcp-shade-fields {
     background-color: #999;
   }
-  body.custom_product_page .pcp-material-colors {
+  body.custom-product-page .pcp-material-colors {
     display: flex;
   }
-  body.custom_product_page .pcp-material-color span {
+  body.custom-product-page .pcp-material-color span {
     display: block;
     width: 50px; 
     height: 50px;
   }
-  body.custom_product_page .pcp-color-grid{display:flex;flex-wrap:wrap;gap:8px;margin:0;padding:0;list-style:none}
-  body.custom_product_page .pcp-color{position:relative}
-  body.custom_product_page .pcp-color-input{position:absolute;opacity:0;pointer-events:none}
-  body.custom_product_page .pcp-color-label{display:flex;align-items:center;gap:8px;padding:6px 10px;border:1px solid #ddd;border-radius:8px;cursor:pointer;user-select:none}
-  body.custom_product_page .pcp-color-input:checked + .pcp-color-label{border-color:#0d6efd;box-shadow:0 0 0 2px rgba(13,110,253,.15)}
-  body.custom_product_page .pcp-swatch{width:20px;height:20px;border-radius:4px;border:1px solid rgba(0,0,0,.1);display:inline-block}
+  body.custom-product-page .pcp-color-grid{display:flex;flex-wrap:wrap;gap:8px;margin:0;padding:0;list-style:none}
+  body.custom-product-page .pcp-color{position:relative}
+  body.custom-product-page .pcp-color-input{position:absolute;opacity:0;pointer-events:none}
+  body.custom-product-page .pcp-color-label{display:flex;align-items:center;gap:8px;padding:6px 10px;border:1px solid #ddd;border-radius:8px;cursor:pointer;user-select:none}
+  body.custom-product-page .pcp-color-input:checked + .pcp-color-label{border-color:#0d6efd;box-shadow:0 0 0 2px rgba(13,110,253,.15)}
+  body.custom-product-page .pcp-swatch{width:20px;height:20px;border-radius:4px;border:1px solid rgba(0,0,0,.1);display:inline-block}

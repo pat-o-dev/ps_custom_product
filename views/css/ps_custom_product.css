@@ -101,3 +101,29 @@ body.custom-product-page #add-custom-product {
   align-items: center;
   justify-content: center;
 }
+
+
+body.custom-product-page #pcp-summary {
+  background: #fafafa;
+}
+
+body.custom-product-page #pcp-bloc-param span strong {
+  color: #444;
+}
+
+body.custom-product-page #pcp-bloc-param ul {
+  margin: 0;
+  padding: 0;
+}
+
+body.custom-product-page #pcp-bloc-render svg {
+  max-width: 100%;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background: #fff;
+}
+
+body.custom-product-page .pcp-bloc-price strong {
+  font-size: 1.5em;
+  color: #28a745;
+}

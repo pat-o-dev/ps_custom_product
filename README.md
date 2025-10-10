@@ -11,10 +11,10 @@
 	- Ajout direct au panier avec prix spécifique 
 	- Aucun override du core
 	- Interface d’administration
+	- Front complet avec preview SVG et sélecteurs dynamiques
 
 
 ## Formule de calcul du prix
-
 ```
 Prix HT = (Base unitaire € + (Aire m² × Prix matière €/m² × Coeff matière × Facteur forme)) × Marge
     •	Base unitaire € : coût fixe de fabrication du produit
@@ -28,7 +28,6 @@ avec une base de 3 €, facteur forme 1.0, marge 1.2 →
 Prix HT = (3 + (6 × 12.5 × 1.1 × 1.0)) × 1.2 = 103,2 €
 ```
 
-
 ## Installation
 	1.	Copier le dossier ps_custom_product dans /modules/
 	2.	Installer le module depuis le back-office (Modules > Modules et services)
@@ -39,7 +38,6 @@ Prix HT = (3 + (6 × 12.5 × 1.1 × 1.0)) × 1.2 = 103,2 €
 	4.	Créer un produit “de base” et saisir son ID dans l’onglet Produits configurables
 
 
-
 ## Structure technique
 	•	controllers/front/ → endpoints AJAX (calcul + ajout panier)
 	•	controllers/admin/ → gestion BO (Produits, Formes, Matières)
@@ -47,14 +45,11 @@ Prix HT = (3 + (6 × 12.5 × 1.1 × 1.0)) × 1.2 = 103,2 €
 	•	classes/ → helpers et logique métier (à venir)
 
 
-
 ## Roadmap
-	•	Front complet avec preview SVG et sélecteurs dynamiques
 	•	Formules de calcul personnalisables par produit
 	•	Gestion de texture et affichage couleur (attribute color group)
 	•	Export/import JSON de configuration
 	•	Compatibilité PrestaShop 9.x
-
 
 
 ## Auteur

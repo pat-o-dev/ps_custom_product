@@ -29,13 +29,152 @@ function pcpGetShapeDimension(shapeCode) {
   return res;
 }
 
+/*** RESUME RENDER ***/
+function pcpUpdateSummary(price) {
+
+  const shapeVal = pcpGetCheckedValue('PCP_SHAPE');
+  const materialVal = pcpGetCheckedValue('PCP_MATERIAL');
+  const colorVal = pcpGetCheckedValue('PCP_COLOR');
+  
+  const shapeLabel = document.querySelector(`label[for="pcp-shape-input-${shapeVal}"]`)?.textContent.trim() || shapeVal || '—';
+  const materialLabel = document.querySelector(`label[for="pcp-material-input-${materialVal}"]`)?.textContent.trim() || materialVal || '—';
+  const colorLabel = document.querySelector(`label[for="pcp-color-${materialVal}-${colorVal}"] .pcp-name`)?.textContent.trim() || colorVal || '—';
+  
+  const { dimensions } = pcpGetShapeDimension(shapeVal);
+  const dimList = document.getElementById('pcp-param-dim-list');
+  dimList.innerHTML = Object.entries(dimensions)
+    .map(([k, v]) => `<li>${k.toUpperCase()} = ${v}</li>`)
+    .join('') || '<li><em>-</em></li>';
+
+  document.getElementById('pcp-param-shape').textContent = shapeLabel || '—';
+  document.getElementById('pcp-param-material').textContent = materialLabel || '—';
+  document.getElementById('pcp-param-color').textContent = colorLabel || '—';
+  document.getElementById('price-result').textContent = price || '';
+  pcpRenderShape(shapeVal, dimensions);
+}
+/*** FAST SVG RENDER ***/
+function pcpRenderShape(shape, dims = {}) {
+  const svg = document.querySelector('#pcp-bloc-render svg');
+  if (!svg) return;
+
+  svg.innerHTML = '';
+  svg.setAttribute('viewBox', '0 0 220 160');
+  svg.style.width = '100%';
+  svg.style.height = 'auto';
+  svg.style.background = '#f9f9f9';
+  svg.style.border = '1px solid #ccc';
+  svg.style.borderRadius = '4px';
+
+  const ns = 'http://www.w3.org/2000/svg';
+
+  const colorInput = document.querySelector('input[name="PCP_COLOR"]:checked');
+  let fillColor = '#ddd';
+  if (colorInput) {
+    const swatch = colorInput.nextElementSibling?.querySelector('.pcp-swatch');
+    if (swatch) fillColor = window.getComputedStyle(swatch).backgroundColor;
+  }
+
+  const ab = parseFloat(dims.ab || dims.AB || 100);
+  const bc = parseFloat(dims.bc || dims.BC || 100);
+  const maxDim = Math.max(ab, bc);
+  const scale = 120 / maxDim;
+
+  const w = ab * scale;
+  const h = bc * scale;
+
+  const x0 = (200 - w) / 2;
+  const y0 = (150 - h) / 2;
+
+  let el;
+  let points = [];
+
+  switch (shape) {
+    case 'RECT':
+      el = document.createElementNS(ns, 'rect');
+      el.setAttribute('x', x0);
+      el.setAttribute('y', y0);
+      el.setAttribute('width', w);
+      el.setAttribute('height', h);
+      el.setAttribute('fill', fillColor);
+      el.setAttribute('stroke', '#333');
+      points = [
+        { x: x0, y: y0, label: 'A' },
+        { x: x0 + w, y: y0, label: 'B' },
+        { x: x0 + w, y: y0 + h, label: 'C' },
+        { x: x0, y: y0 + h, label: 'D' },
+      ];
+      break;
+
+    case 'SQR':
+      el = document.createElementNS(ns, 'rect');
+      el.setAttribute('x', 60);
+      el.setAttribute('y', 30);
+      el.setAttribute('width', 100);
+      el.setAttribute('height', 100);
+      el.setAttribute('fill', fillColor);
+      el.setAttribute('stroke', '#333');
+      points = [
+        { x: 60, y: 30, label: 'A' },
+        { x: 160, y: 30, label: 'B' },
+        { x: 160, y: 130, label: 'C' },
+        { x: 60, y: 130, label: 'D' },
+      ];
+      break;
+
+    case 'TRI':
+      el = document.createElementNS(ns, 'polygon');
+      el.setAttribute('points', '110,20 190,130 30,130');
+      el.setAttribute('fill', fillColor);
+      el.setAttribute('stroke', '#333');
+      points = [
+        { x: 110, y: 20, label: 'A' },
+        { x: 190, y: 130, label: 'B' },
+        { x: 30, y: 130, label: 'C' },
+      ];
+      break;
+
+    default:
+      el = document.createElementNS(ns, 'text');
+      el.setAttribute('x', 70);
+      el.setAttribute('y', 80);
+      el.textContent = 'Aperçu';
+      el.setAttribute('fill', '#aaa');
+      el.setAttribute('font-size', '14');
+      el.setAttribute('font-family', 'sans-serif');
+  }
+
+  svg.appendChild(el);
+
+  points.forEach(p => {
+    const circle = document.createElementNS(ns, 'circle');
+    circle.setAttribute('cx', p.x);
+    circle.setAttribute('cy', p.y);
+    circle.setAttribute('r', 2.5);
+    circle.setAttribute('fill', '#333');
+    svg.appendChild(circle);
+
+    const label = document.createElementNS(ns, 'text');
+    label.setAttribute('x', p.x + 4);
+    label.setAttribute('y', p.y - 4);
+    label.textContent = p.label;
+    label.setAttribute('fill', '#333');
+    label.setAttribute('font-size', '10');
+    label.setAttribute('font-family', 'sans-serif');
+    svg.appendChild(label);
+  });
+}
+
 /*** SHAPES ***/
 function pcpShowShape(val) {
+  // affiche / masque les blocs de champs selon la forme choisie
   document.querySelectorAll('.pcp-shape-fields')
     .forEach(b => b.style.display = (b.dataset.shape === val) ? '' : 'none');
+
+  // met à jour les boutons actifs
   document.querySelectorAll('#pcp-shapes-list label.btn')
     .forEach(l => l.classList.remove('active'));
-  const input = document.querySelector(`#pcp-shapes-list input[value='"${val}'"]`);
+
+  const input = document.querySelector(`#pcp-shapes-list input[value="${val}"]`);
   if (input) input.closest('label.btn')?.classList.add('active');
 }
 
@@ -89,8 +228,9 @@ async function pcpQuote() {
   const result = await pcpCall('quote');
   if (result?.success) {
     window.lastQuote = result;
-    priceResult.innerHTML = `<span>Prix calculé :</span> <strong>${result.display_price}</strong>`;
+    priceResult.innerHTML = result.display_price;
     btnAddContainer.style.display = 'block';
+    pcpUpdateSummary(result.display_price)
   } else {
     priceResult.textContent = 'Erreur : ' + (result?.error || 'calcul impossible');
     btnAddContainer.style.display = 'none';

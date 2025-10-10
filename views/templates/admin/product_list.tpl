@@ -25,6 +25,7 @@
             <th style="width:160px;">{l s='Base unitaire (€)' mod='ps_custom_product'}</th>
             <th style="width:140px;">{l s='Tare (kg)' mod='ps_custom_product'}</th>
             <th style="width:140px;">{l s='Marge (Ratio)' mod='ps_custom_product'}</th>
+            <th style="width:140px;">{l s='Attribute Group' mod='ps_custom_product'}</th>
             <th class="text-right" style="width:160px;">{l s='Actions' mod='ps_custom_product'}</th>
           </tr>
         </thead>
@@ -47,6 +48,16 @@
                 <input type="text" class="form-control"
                        name="SETTINGS[{$p.id}][rate_margin]"
                        value="{$p.rate_margin}">
+              </td>
+              <td>
+                <select name="SETTINGS[{$p.id}][id_attribute_group]" class="form-control">
+                  <option value="0">-</option>
+                  {foreach $attribute_groups as $g}
+                    <option value="{$g.id_attribute_group}" {if $p.id_attribute_group == $g.id_attribute_group}selected{/if}>
+                      {$g.name|escape}
+                    </option>
+                  {/foreach}
+                </select>
               </td>
               <td class="text-right">
                 <a class="btn btn-sm btn-danger"

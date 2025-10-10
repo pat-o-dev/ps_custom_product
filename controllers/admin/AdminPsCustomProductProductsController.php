@@ -34,9 +34,10 @@ class AdminPsCustomProductProductsController extends ModuleAdminController
         if (!is_array($arr)) $arr = [];
         foreach ($arr as $pid => &$s) {
             // defaults
-            if (!isset($s['base_unit_price']))   $s['base_unit_price'] = 0.0;
-            if (!isset($s['tare_weight']))       $s['tare_weight'] = 0.0;
-            if (!isset($s['rate_margin']))       $s['rate_margin'] = 1.0;
+            if (!isset($s['base_unit_price'])) $s['base_unit_price'] = 0.0;
+            if (!isset($s['tare_weight'])) $s['tare_weight'] = 0.0;
+            if (!isset($s['rate_margin'])) $s['rate_margin'] = 1.0;
+            if (!isset($s['id_attribute_group'])) $s['id_attribute_group'] = 0;
         }
         unset($s);
 
@@ -121,15 +122,26 @@ class AdminPsCustomProductProductsController extends ModuleAdminController
             $products[] = [
                 'id' => $pid,
                 'name' => $this->getProductName($pid),
-                'base_unit_price'  => $fmt($s['base_unit_price']),
-                'tare_weight'      => $fmt($s['tare_weight']),
-                'rate_margin'      => $fmt($s['rate_margin']),
+                'base_unit_price'    => $fmt($s['base_unit_price']),
+                'tare_weight'        => $fmt($s['tare_weight']),
+                'rate_margin'        => $fmt($s['rate_margin']),
+                'id_attribute_group' => $fmt($s['id_attribute_group']),
+
                 'remove_url'       => self::$currentIndex.'&token='.$this->token.'&remove_pcp_product='.$pid,
             ];
         }
 
+        $groups = Db::getInstance()->executeS('
+            SELECT ag.id_attribute_group, agl.name 
+            FROM '._DB_PREFIX_.'attribute_group ag 
+            JOIN '._DB_PREFIX_.'attribute_group_lang agl 
+              ON (agl.id_attribute_group = ag.id_attribute_group AND agl.id_lang = '.(int)$this->context->language->id.')
+            ORDER BY agl.name ASC
+        ');
+
         $this->context->smarty->assign([
             'products'    => $products,
+            'attribute_groups' => $groups,
             'save_action' => 'submit_save_product_settings',
             'reset_url'   => self::$currentIndex.'&token='.$this->token.'&reset_pcp_product_settings=1',
         ]);
@@ -160,7 +172,7 @@ class AdminPsCustomProductProductsController extends ModuleAdminController
 
                 $settings = $this->getSettings();
                 if (!isset($settings[$pid])) {
-                    $settings[$pid] = ['base_unit_price'=>0, 'tare_weight'=>0, 'rate_margin'=>1.0];
+                    $settings[$pid] = ['base_unit_price'=>0, 'tare_weight'=>0, 'rate_margin'=>1.0, 'id_attribute_group' => 0];
                     $this->saveSettings($settings);
                 }
 
@@ -189,7 +201,7 @@ class AdminPsCustomProductProductsController extends ModuleAdminController
             $ids = $this->getConfiguredProductIds();
             $settings = [];
             foreach ($ids as $pid) {
-                $settings[$pid] = ['base_unit_price'=>0, 'tare_weight'=>0, 'rate_margin'=>1.0];
+                $settings[$pid] = ['base_unit_price'=>0, 'tare_weight'=>0, 'rate_margin'=>1.0, 'id_attribute_group' => 0];
             }
             $this->saveSettings($settings);
             $this->confirmations[] = $this->l('Réglages produits réinitialisés.');
@@ -206,14 +218,16 @@ class AdminPsCustomProductProductsController extends ModuleAdminController
 
             foreach ($ids as $pid) {
                 $row = $payload[$pid] ?? [];
-                $baseUnit  = $settings[$pid]['base_unit_price']   ?? 0;
-                $tare      = $settings[$pid]['tare_weight']       ?? 0;
-                $rate      = $settings[$pid]['rate_margin']       ?? 1.0;
+                $baseUnit           = $settings[$pid]['base_unit_price']   ?? 0;
+                $tare               = $settings[$pid]['tare_weight']       ?? 0;
+                $rate               = $settings[$pid]['rate_margin']       ?? 1.0;
+                $id_attribute_group = $settings[$pid]['id_attribute_group']?? 0;
 
                 $settings[$pid] = [
                     'base_unit_price'   => array_key_exists('base_unit_price',   $row) ? $this->nf($row['base_unit_price'])   : $baseUnit,
                     'tare_weight'       => array_key_exists('tare_weight',       $row) ? $this->nf($row['tare_weight'])       : $tare,
                     'rate_margin'       => array_key_exists('rate_margin',       $row) ? $this->nf($row['rate_margin'])       : $rate,
+                    'id_attribute_group'=> array_key_exists('id_attribute_group',$row) ? $this->nf($row['id_attribute_group']): $id_attribute_group,
                 ];
             }
 

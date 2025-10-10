@@ -6,11 +6,11 @@ class Ps_Custom_ProductGetCustomProductModuleFrontController extends ModuleFront
     public function initContent()
     {
         parent::initContent();
-        
+
         header('Content-Type: application/json; charset=utf-8');
 
         try {
-            // get data from fetch
+            // Get data from fetch
             $input = json_decode(Tools::file_get_contents('php://input'), true);
 
             $action = (string)($input['action'] ?? 'quote');
@@ -18,7 +18,7 @@ class Ps_Custom_ProductGetCustomProductModuleFrontController extends ModuleFront
             $color =(int)($input['color'] ?? 0);#dont need for the moment
             $materialCode =(string)($input['material'] ?? 0);
             $shape =(string)($input['shape'] ?? null);
-
+            $quantity = (int)($input['quantity'] ?? 1);
             $dimensions = $input['dimensions'] ?? [];
             
             // Load JSON setting
@@ -26,6 +26,7 @@ class Ps_Custom_ProductGetCustomProductModuleFrontController extends ModuleFront
             $materials = json_decode(Configuration::get('PCP_MATERIALS'), true) ?: [];
             $productsSetting = json_decode(Configuration::get('PCP_PRODUCT_SETTINGS'), true) ?: [];
 
+            // Init 
             $shapeFactor = (float)($shapes[$shape]['factor'] ?? 1.0);
             $material = $materials[$materialCode] ?? null;
             $pricePerM2 = (float)($material['price_m2'] ?? 0);
@@ -35,9 +36,10 @@ class Ps_Custom_ProductGetCustomProductModuleFrontController extends ModuleFront
             $productSetting = $productsSetting[$id_product] ?? [];
             $basePrice = (float)($productSetting['base_unit_price'] ?? 0);
             $margin = (float)($productSetting['rate_margin'] ?? 1.0);
+            $id_attribute_group = (float)($productSetting['id_attribute_group'] ?? 0);
             $productTare = (float) ($productSetting['tare_weight'] ?? 1.0);
       
-            // compute surface
+            // Compute surface
             $surfaceM2 = $this->getSurface($shape,$dimensions);
             if ($surfaceM2 === 0) {
                 die(json_encode([
@@ -46,8 +48,7 @@ class Ps_Custom_ProductGetCustomProductModuleFrontController extends ModuleFront
                 ]));
             }
 
-            // price
-            #TODO refactoriser
+            // Compute price
             $weightKgTotal = max(0, $productTare + $surfaceM2 * $materialWeightM2);
             $priceHt = ($basePrice + ($surfaceM2 * $pricePerM2 * $fabricCoeff * $shapeFactor)) * $margin;
             $taxRate = 0;
@@ -59,6 +60,7 @@ class Ps_Custom_ProductGetCustomProductModuleFrontController extends ModuleFront
             $formatter = new PriceFormatter();
             $displayPrice = $formatter->format($priceTtc);
             
+            // First step Quote
             if ($action === 'quote') {
                 die(json_encode([
                     'success' => true,
@@ -71,11 +73,12 @@ class Ps_Custom_ProductGetCustomProductModuleFrontController extends ModuleFront
                     'surface_m2' => round($surfaceM2, 3),
                 ]));
             }
-
+            // Need to Add in cart
             if ($action === 'add') {
-                $id_attribute_group = 6; // Groupe cible (ex: "Configurations personnalisées")
-                $id_shop = 1;#TODO get current shop
+                $id_shop = (int)$this->context->shop->id;
 
+                // Generate Attribute Label
+                // #TODO add color texte prepare Hook Display Cart & Order
                 $label = $shape;
                 foreach ($dimensions as $k => $v) {
                     $label .= ' ' . strtoupper($k) . '=' . (float)$v;
@@ -88,53 +91,17 @@ class Ps_Custom_ProductGetCustomProductModuleFrontController extends ModuleFront
                     $label .= ' ' . strtoupper($color);
                 }
 
-                $id_attribute = $this->getAttribute($id_attribute_group, $label );
-           
-                $id_product_attribute = $this->getProductAttribute($id_product, $id_attribute, $weightKgTotal);
-            
-                Db::getInstance()->delete(
-                    'specific_price',
-                    'id_product='.(int)$id_product.' AND id_product_attribute='.(int)$id_product_attribute
-                );
-   
-                $sp = new SpecificPrice();
-                $sp->id_product           = (int)$id_product;
-                $sp->id_product_attribute = (int)$id_product_attribute;
-                $sp->id_shop              = (int)$id_shop;
-                $sp->id_currency          = 0; // toutes devises
-                $sp->id_country           = 0;
-                $sp->id_group             = 0;
-                $sp->id_customer          = 0;
-                $sp->price                = Tools::ps_round($priceHt, 3); // PRIX HT FINAL
-                $sp->from_quantity        = 1;
-                $sp->reduction            = 0;
-                $sp->reduction_type       = 'amount';
-                $sp->from                 = '0000-00-00 00:00:00';
-                $sp->to                   = '0000-00-00 00:00:00';
-                $sp->add();
-   
-                StockAvailable::setProductOutOfStock((int)$id_product, 1);
-                Product::flushPriceCache();
-
+                // Get or Create Attribute
+                $id_attribute = $this->getAttribute($id_attribute_group, $label, $id_shop);
+                // Get or Create Product Attribute
+                $id_product_attribute = $this->getProductAttribute($id_product, $id_attribute, $weightKgTotal, $priceHt, $id_shop);
+                
                 if (!$id_product_attribute) {
                     throw new Exception($this->trans('Impossible d’ajouter au panier.', [], 'Modules.ps_custom_product.Front'));
                 }
                 
-                if (!$this->context->cart->id) {
-                    $this->context->cart->add();
-                    $this->context->cookie->id_cart = (int)$this->context->cart->id;
-                }
-                $ok = $this->context->cart->updateQty(
-                    (int)($input['quantity'] ?? 1),
-                    (int)$id_product,
-                    (int)$id_product_attribute,
-                    false,
-                    'up',
-                    0,
-                    null,
-                    true
-                );
-                if (!$ok) {
+                $addToCart = $this->addToCart($id_product, $id_product_attribute, $quantity);
+                if (!$addToCart) {
                     throw new Exception($this->trans('Impossible d’ajouter au panier.', [], 'Modules.ps_custom_product.Front'));
                 }
 
@@ -143,6 +110,7 @@ class Ps_Custom_ProductGetCustomProductModuleFrontController extends ModuleFront
                     'action'  => 'add',
                     'id_product' => $id_product,
                     'id_product_attribute' => $id_product_attribute,
+                    'quantity' => $quantity,
 
                 ]));
 
@@ -156,8 +124,31 @@ class Ps_Custom_ProductGetCustomProductModuleFrontController extends ModuleFront
         }
     }
 
-    public function getProductAttribute($id_product, $id_attribute, $weightKgTotal, $id_shop = 1)
+    public function addToCart($id_product, $id_product_attribute, $quantity = 1)
     {
+        // Init cart if not exist
+        if (!$this->context->cart->id) {
+            $this->context->cart->add();
+            $this->context->cookie->id_cart = (int)$this->context->cart->id;
+        }
+        // Add Product Attribute to Cart
+        $add =(bool) $this->context->cart->updateQty(
+            (int)($quantity),
+            (int)$id_product,
+            (int)$id_product_attribute,
+            false,
+            'up',
+            0,
+            null,
+            true
+        );
+
+        return $add;
+    }
+
+    public function getProductAttribute($id_product, $id_attribute, $weightKgTotal, $priceHt, $id_shop = 1)
+    {
+        // Exist ? Get
         $id_product_attribute = (int)Db::getInstance()->getValue(
             'SELECT pa.id_product_attribute
             FROM '._DB_PREFIX_.'product_attribute pa
@@ -168,9 +159,9 @@ class Ps_Custom_ProductGetCustomProductModuleFrontController extends ModuleFront
             HAVING GROUP_CONCAT(pac.id_attribute ORDER BY pac.id_attribute SEPARATOR ",") = "'.pSQL((string)$id_attribute).'"'
         );
 
-
+        // Create
         if (!$id_product_attribute) {
-            // product_attribute
+            // Product_attribute
             Db::getInstance()->insert('product_attribute', [
                 'id_product'     => (int)$id_product,
                 'reference'      => '',        // #TODO SKU
@@ -182,7 +173,7 @@ class Ps_Custom_ProductGetCustomProductModuleFrontController extends ModuleFront
 
             $id_product_attribute = (int)Db::getInstance()->Insert_ID();
 
-            // product_attribute_shop
+            // Product_attribute_shop
             Db::getInstance()->insert('product_attribute_shop', [
                 'id_product'           => (int)$id_product,
                 'id_product_attribute' => (int)$id_product_attribute,
@@ -192,13 +183,13 @@ class Ps_Custom_ProductGetCustomProductModuleFrontController extends ModuleFront
                 'default_on'           => null,
                 'available_date'       => null,
             ], true);
-
+            // Product_attribute_combination
             Db::getInstance()->insert('product_attribute_combination', [
                 'id_attribute'         => (int)$id_attribute,
                 'id_product_attribute' => (int)$id_product_attribute,
             ]);
 
-            // stock_available
+            // Stock_available
             Db::getInstance()->insert('stock_available', [
                 'id_product'           => (int)$id_product,
                 'id_product_attribute' => (int)$id_product_attribute,
@@ -206,13 +197,38 @@ class Ps_Custom_ProductGetCustomProductModuleFrontController extends ModuleFront
                 'quantity'             => 9999,
                 'out_of_stock'         => 1,
             ]);
-        }
+            // Specific_price
+             Db::getInstance()->delete(
+                'specific_price',
+                'id_product='.(int)$id_product.' AND id_product_attribute='.(int)$id_product_attribute
+            );
 
+            $sp = new SpecificPrice();
+            $sp->id_product           = (int)$id_product;
+            $sp->id_product_attribute = (int)$id_product_attribute;
+            $sp->id_shop              = (int)$id_shop;
+            $sp->id_currency          = 0;
+            $sp->id_country           = 0;
+            $sp->id_group             = 0;
+            $sp->id_customer          = 0;
+            $sp->price                = Tools::ps_round($priceHt, 3); // PRIX HT FINAL
+            $sp->from_quantity        = 1;
+            $sp->reduction            = 0;
+            $sp->reduction_type       = 'amount';
+            $sp->from                 = '0000-00-00 00:00:00';
+            $sp->to                   = '0000-00-00 00:00:00';
+            $sp->add();
+
+            StockAvailable::setProductOutOfStock((int)$id_product, 1);
+            Product::flushPriceCache();
+        }
+       
         return $id_product_attribute;
     }
 
     public function getAttribute($id_attribute_group, $label, $id_shop = 1)
     {
+        // Exist ??
         $id_attribute = (int)Db::getInstance()->getValue(
             'SELECT id_attribute FROM '._DB_PREFIX_.'attribute_lang 
             WHERE name = "' . pSQL($label) . '"'
@@ -220,7 +236,7 @@ class Ps_Custom_ProductGetCustomProductModuleFrontController extends ModuleFront
         if($id_attribute > 0) {
             return $id_attribute;
         }       
-       
+        // Attribute
         $result = Db::getInstance()->insert('attribute', [
             'id_attribute_group' => $id_attribute_group,
             'color'              => '',
@@ -232,7 +248,7 @@ class Ps_Custom_ProductGetCustomProductModuleFrontController extends ModuleFront
         }
         $id_attribute = (int)Db::getInstance()->Insert_ID();
 
-        // attribute_lang
+        // Attribute_lang
         foreach (Language::getLanguages(false) as $lang) {
             Db::getInstance()->insert('attribute_lang', [
                 'id_attribute' => (int)$id_attribute,
@@ -241,7 +257,7 @@ class Ps_Custom_ProductGetCustomProductModuleFrontController extends ModuleFront
             ]);
         }
 
-        // attribute_shop
+        // Attribute_shop
         Db::getInstance()->insert('attribute_shop', [
             'id_attribute' => (int)$id_attribute,
             'id_shop'      => (int)$id_shop,
@@ -252,10 +268,12 @@ class Ps_Custom_ProductGetCustomProductModuleFrontController extends ModuleFront
 
     public function getSurface($shape, $dimensions = []) 
     {
+        // Get dimension
         $ab = (float)($dimensions['ab'] ?? 0);
         $bc =(float)($dimensions['bc'] ?? 0);
         $ca =(float)($dimensions['ca'] ?? 0);
 
+        // Compute by shape
         switch($shape) {
             case 'RECT':
                 $surfaceM2 = max(0, ($ab / 100) * ($bc / 100));
@@ -264,7 +282,7 @@ class Ps_Custom_ProductGetCustomProductModuleFrontController extends ModuleFront
                 $surfaceM2 = max(0, ($ab / 100) * ($ab / 100));
                 break;
             case 'TRI':
-                // Formule Héron
+                // Heron
                 $a = $ab / 100;
                 $b = $bc / 100;
                 $c = $ca / 100;

@@ -101,7 +101,6 @@ class Ps_custom_product extends Module
         }
 
         return true;
-
     }
 
     private function uninstallTab()
@@ -127,7 +126,7 @@ class Ps_custom_product extends Module
     public function hookHeader($params)
     {
         if ($this->context->controller && $this->context->controller->php_self === 'product') {
-            // JS
+            // Load JS
             $this->context->controller->registerJavascript(
                 'pscp-front-js',
                 'modules/'.$this->name.'/views/js/ps_custom_product.js',
@@ -137,7 +136,7 @@ class Ps_custom_product extends Module
                     'attributes' => 'defer',
                 ]
             );
-            // (Optionnel) CSS
+            // Load CSS
             $this->context->controller->registerStylesheet(
                 'pscp-front-css',
                 'modules/'.$this->name.'/views/css/ps_custom_product.css',
@@ -151,26 +150,28 @@ class Ps_custom_product extends Module
 
     public function hookDisplayAfterProductThumbs($params) {
         $id_product = $params['product']['id'];
+        // Is Product Page ?
         if (!$id_product) return;
         
         $ids_product = array_map('intval',explode(',', (string) Configuration::get('PCP_CONFIG_PRODUCTS')));
+        // Is Custom Product ?
         if(in_array($id_product, $ids_product)) {
             $id_lang = (int) $this->context->language->id;
             
             $shapes = json_decode(Configuration::get('PCP_SHAPES', '{}'), true);
             $materials = json_decode(Configuration::get('PCP_MATERIALS', '{}'), true);
+            // Get colors List
             $colors = [];
             foreach($materials as &$material) {
                 $material['colors'] = $colors[$material['color_group_id']] ?? $this->getColorsByGroup($material['color_group_id'], $id_lang);   
             }
-
-            
+ 
             $this->context->smarty->assign([
                 'id_product' => $id_product,
                 'shapes' => $shapes,
                 'materials' => $materials,
             ]);
-            return $this->context->smarty->fetch('module:ps_custom_product/views/templates/hook/customize_product.tpl');
+            return $this->context->smarty->fetch('module:'.$this->name.'/views/templates/hook/customize_product.tpl');
         }
         return null; 
     }

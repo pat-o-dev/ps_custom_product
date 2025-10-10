@@ -37,6 +37,38 @@ Prix HT = (3 + (6 × 12.5 × 1.1 × 1.0)) × 1.2 = 103,2 €
 	•	les produits configurables (onglet Produits)
 	4.	Créer un produit “de base” et saisir son ID dans l’onglet Produits configurables
 
+## 🎨 Intégration dans le thème
+
+    Par défaut, PrestaShop avec le thème Classic ne propose pas de hook idéal pour placer le configurateur à droite de la photo produit.  
+    Il est donc **nécessaire d’ajouter manuellement un hook dans le thème**, ou de **réutiliser un hook existant**.
+
+### Ajouter un hook dédié (recommandé)
+
+Modifier le fichier :
+```
+/themes/_________/templates/catalog/product.tpl
+```
+
+et insérer juste avant le bloc :
+```html
+<div class="product-actions js-product-actions">
+```
+
+le code suivant :
+```tpl
+{hook h='displayProductConfigurator' product=$product}
+```
+
+> Ce hook permet au module d’afficher le configurateur à droite, sous le prix et la description.
+
+Dans le module :
+```php
+public function install()
+{
+    return parent::install()
+        && $this->registerHook('displayProductConfigurator');
+}
+```
 
 ## Structure technique
 	•	controllers/front/ → endpoints AJAX (calcul + ajout panier)

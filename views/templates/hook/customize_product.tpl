@@ -1,9 +1,35 @@
 {if $shapes}
-<div id="pcp-main-content" class="container py-2">
-  {include file="module:ps_custom_product/views/templates/hook/_partials/shapes.tpl"}
-  {include file="module:ps_custom_product/views/templates/hook/_partials/materials.tpl"}
-  {include file="module:ps_custom_product/views/templates/hook/_partials/actions.tpl"}
+<div id="pcp-tabs" class="mt-4">
+  <!-- Onglets -->
+  <ul class="nav nav-tabs" role="tablist">
+    <li class="nav-item">
+      <a class="nav-link active" id="pcp-config-tab" data-toggle="tab" href="#pcp-main-content" role="tab">
+        {l s='Personnalisation' mod='ps_custom_product'}
+      </a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" id="pcp-preview-tab" data-toggle="tab" href="#pcp-preview" role="tab">
+        {l s='Aperçu' mod='ps_custom_product'}
+      </a>
+    </li>
+  </ul>
+  <!-- Contenu -->
+  <div class="tab-content border border-top-0 rounded-bottom bg-white">
+    <div class="tab-pane fade show active in p-2" id="pcp-main-content" role="tabpanel" aria-labelledby="pcp-config-tab">
+      {include file="module:ps_custom_product/views/templates/hook/_partials/shapes.tpl"}
+      {include file="module:ps_custom_product/views/templates/hook/_partials/materials.tpl"}
+        <button id="get-custom-product" class="btn btn-primary" type="button" onclick="pcpQuote()">
+        <i class="material-icons"></i>
+        {l s='Préparer votre produit' mod='ps_custom_product'}
+      </button>
+    </div>
+
+    <div class="tab-pane fade p-2" id="pcp-preview" role="tabpanel">
+      {include file="module:ps_custom_product/views/templates/hook/_partials/actions.tpl"}
+  </div>
 </div>
+
+
 <div id="pcp-root"
      data-id-product="{$id_product}"
      data-custom-product-url="{$link->getModuleLink('ps_custom_product','getCustomProduct')}">

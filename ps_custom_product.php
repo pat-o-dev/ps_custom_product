@@ -54,6 +54,7 @@ class Ps_custom_product extends Module
         return parent::install()
             && $this->registerHook('header')
             && $this->registerHook('displayAfterProductThumbs')
+            && $this->registerHook('displayProductConfigurator')
             && $this->installTab()
             && Configuration::updateValue('PCP_CONFIG_PRODUCTS', '')
             && Configuration::updateValue('PCP_PRODUCT_SETTINGS', '')
@@ -148,7 +149,38 @@ class Ps_custom_product extends Module
         }
     }
 
+
+    public function hookDisplayProductConfigurator($params) {
+        $id_product = $params['product']['id'];
+        // Is Product Page ?
+        if (!$id_product) return;
+        
+        $ids_product = array_map('intval',explode(',', (string) Configuration::get('PCP_CONFIG_PRODUCTS')));
+        // Is Custom Product ?
+        if(in_array($id_product, $ids_product)) {
+            $id_lang = (int) $this->context->language->id;
+            
+            $shapes = json_decode(Configuration::get('PCP_SHAPES', '{}'), true);
+            $materials = json_decode(Configuration::get('PCP_MATERIALS', '{}'), true);
+            // Get colors List
+            $colors = [];
+            foreach($materials as &$material) {
+                $material['colors'] = $colors[$material['color_group_id']] ?? $this->getColorsByGroup($material['color_group_id'], $id_lang);   
+            }
+ 
+            $this->context->smarty->assign([
+                'id_product' => $id_product,
+                'shapes' => $shapes,
+                'materials' => $materials,
+            ]);
+            return $this->context->smarty->fetch('module:'.$this->name.'/views/templates/hook/customize_product.tpl');
+        }
+        return null; 
+    }
+
+
     public function hookDisplayAfterProductThumbs($params) {
+        return null;
         $id_product = $params['product']['id'];
         // Is Product Page ?
         if (!$id_product) return;

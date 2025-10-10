@@ -1,4 +1,4 @@
-<div id="pcp-shapes-list" class="group-input mt-2 mb-0">
+<div id="pcp-shapes-list" class="group-input mt-0 mb-0">
 	<h3>1 - {l s='Choisissez la forme' mod='ps_custom_product'}</h3>
 
 	<div class="btn-group">
@@ -19,12 +19,12 @@
 	<div id="pcp-shape-{$code}-fields" class="pcp-shape-fields border rounded px-2 mb-2" data-shape="{$code}" style="{if $smarty.foreach.shapesDimension.first}display:block;{else}display:none;{/if}">
 		{if isset($shape.fields)}
 		  {foreach from=$shape.fields key=fname item=field}
-      <div class="form-group d-flex align-items-center mb-2" style="gap:8px;">
-        <label for="pcp-{$code}-{$fname}" class="mb-0 flex-grow-1" style="font-weight:500;">
+      <div class="form-group row mb-2" style="gap:8px;">
+        <label for="pcp-{$code}-{$fname}" class="mb-0 col-sm-4 col-form-label" style="font-weight:500;">
           {$fname|escape:'htmlall'|upper}
           <small class="text-muted">({$field.min} → {$field.max})</small>
         </label>
-        <input class="form-control text-center" type="number" name="{$fname}" id="pcp-{$code}-{$fname}" value="{$field.default}" min="{$field.min}" max="{$field.max}" step="{$field.step}" style="width:90px;"/>
+        <input class="form-control col-sm-8 text-right" type="number" name="{$fname}" id="pcp-{$code}-{$fname}" value="{$field.default}" min="{$field.min}" max="{$field.max}" step="{$field.step}" style="width:90px;"/>
       </div>
 		  {/foreach}
 		{/if}

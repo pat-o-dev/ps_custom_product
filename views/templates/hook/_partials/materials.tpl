@@ -25,7 +25,7 @@
   <h3>4 - {l s='Choisissez la couleur' mod='ps_custom_product'}</h3>
 
   {foreach from=$materials key=code item=material name=materialsColor}
-    <div class="pcp-material-fields border rounded px-2 mb-2"
+    <div class="pcp-material-fields border rounded px-0 mb-2"
          data-material="{$code}"
          style="{if $smarty.foreach.materialsColor.first}display:block;{else}display:none;{/if}">
 

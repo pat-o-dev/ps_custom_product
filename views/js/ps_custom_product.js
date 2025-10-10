@@ -1,4 +1,10 @@
 /*** GLOBAL PCP HELPERS ***/
+let pcpInit = false;
+// Switch Tabs
+function pcpShowPreviewTab() {
+  const tab = document.querySelector('#pcp-preview-tab');
+  if (tab) tab.click();
+}
 
 // Update Quantity
 function pcpChangeQty(delta) {
@@ -230,7 +236,12 @@ async function pcpQuote() {
     window.lastQuote = result;
     priceResult.innerHTML = result.display_price;
     btnAddContainer.style.display = 'block';
-    pcpUpdateSummary(result.display_price)
+    if(pcpInit)
+      pcpShowPreviewTab();
+    else 
+      pcpInit = true;
+    pcpUpdateSummary(result.display_price);
+    
   } else {
     priceResult.textContent = 'Erreur : ' + (result?.error || 'calcul impossible');
     btnAddContainer.style.display = 'none';
@@ -280,3 +291,13 @@ async function pcpAddToCart() {
     // Silent Error, Modal not show
   }
 }
+
+// INIT
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelector('#get-custom-product').click()
+  const tabConfig = document.querySelector('#tab-config-tab');
+  if (tabConfig && !tabConfig.classList.contains('active')) {
+    new bootstrap.Tab(tabConfig).show();
+  }
+
+});

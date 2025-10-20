@@ -5,10 +5,10 @@ body.custom-product-page .js-product-prices {
   display: none;
 }
 body.custom-product-page #pcp-main-content {
-  background-color: #eeeeee;
+  background-color: #fff;
 }
 body.custom-product-page .pcp-shade-fields {
-  background-color: #eeeeee;
+  background-color: #fff;
 }
 body.custom-product-page .pcp-material-colors {
   display: flex;
@@ -104,7 +104,7 @@ body.custom-product-page #add-custom-product {
 
 
 body.custom-product-page #pcp-preview {
-  background: #eeeeee;
+  background: #fff;
 }
 
 body.custom-product-page #pcp-bloc-param span strong {

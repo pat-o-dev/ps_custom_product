@@ -1,5 +1,34 @@
 <?php
+/**
+ * 2007-2025 PrestaShop
+ *
+ * NOTICE OF LICENSE
+ *
+ * This source file is subject to the Academic Free License (AFL 3.0)
+ * that is bundled with this package in the file LICENSE.txt.
+ * It is also available through the world-wide-web at this URL:
+ * http://opensource.org/licenses/afl-3.0.php
+ * If you did not receive a copy of the license and are unable to
+ * obtain it through the world-wide-web, please send an email
+ * to license@prestashop.com so we can send you a copy immediately.
+ *
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade PrestaShop to newer
+ * versions in the future. If you wish to customize PrestaShop for your
+ * needs please refer to http://www.prestashop.com for more information.
+ *
+ *  @author    PrestaShop SA <contact@prestashop.com>
+ *  @copyright 2007-2025 PrestaShop SA
+ *  @license   http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
+ *  International Registered Trademark & Property of PrestaShop SA
+ */
+
 use PrestaShop\PrestaShop\Adapter\Product\PriceFormatter;
+
+if (!defined('_PS_VERSION_')) {
+    exit;
+}
 
 class Ps_Custom_ProductGetCustomProductModuleFrontController extends ModuleFrontController
 {
@@ -13,14 +42,14 @@ class Ps_Custom_ProductGetCustomProductModuleFrontController extends ModuleFront
             // Get data from fetch
             $input = json_decode(Tools::file_get_contents('php://input'), true);
 
-            $action = (string)($input['action'] ?? 'quote');
-            $id_product = (int)($input['id_product'] ?? 0);
-            $color =(int)($input['color'] ?? 0);#dont need for the moment
-            $materialCode =(string)($input['material'] ?? 0);
-            $shape =(string)($input['shape'] ?? null);
-            $quantity = (int)($input['quantity'] ?? 1);
+            $action = (string) $input['action'] ?? 'quote';
+            $id_product = (int) $input['id_product'] ?? 0;
+            $color = (int) $input['color'] ?? 0;
+            $materialCode = (string) $input['material'] ?? 0;
+            $shape = (string) $input['shape'] ?? null;
+            $quantity = (int) $input['quantity'] ?? 1;
             $dimensions = $input['dimensions'] ?? [];
-            
+
             // Load JSON setting
             $shapes = json_decode(Configuration::get('PCP_SHAPES'), true) ?: [];
             $materials = json_decode(Configuration::get('PCP_MATERIALS'), true) ?: [];
@@ -38,11 +67,11 @@ class Ps_Custom_ProductGetCustomProductModuleFrontController extends ModuleFront
             $margin = (float)($productSetting['rate_margin'] ?? 1.0);
             $id_attribute_group = (float)($productSetting['id_attribute_group'] ?? 0);
             $productTare = (float) ($productSetting['tare_weight'] ?? 1.0);
-      
+
             // Compute surface
-            $surfaceM2 = $this->getSurface($shape,$dimensions);
+            $surfaceM2 = $this->getSurface($shape, $dimensions);
             if ($surfaceM2 === 0) {
-                die(json_encode([
+                exit(json_encode([
                     'success' => false,
                     'error'   => $this->trans('Forme inconnue ou dimensions invalides.', [], 'Modules.ps_custom_product.Front'),
                 ]));
@@ -59,10 +88,10 @@ class Ps_Custom_ProductGetCustomProductModuleFrontController extends ModuleFront
             $priceTtc = $priceHt * (1 + $taxRate / 100);
             $formatter = new PriceFormatter();
             $displayPrice = $formatter->format($priceTtc);
-            
+
             // First step Quote
             if ($action === 'quote') {
-                die(json_encode([
+                exit(json_encode([
                     'success' => true,
                     'id_product' => $id_product,
                     'shape' => $shape,
@@ -78,7 +107,6 @@ class Ps_Custom_ProductGetCustomProductModuleFrontController extends ModuleFront
                 $id_shop = (int)$this->context->shop->id;
 
                 // Generate Attribute Label
-                // #TODO add color texte prepare Hook Display Cart & Order
                 $label = $shape;
                 foreach ($dimensions as $k => $v) {
                     $label .= ' ' . strtoupper($k) . '=' . (float)$v;
@@ -88,24 +116,24 @@ class Ps_Custom_ProductGetCustomProductModuleFrontController extends ModuleFront
                 }
 
                 if ($color) {
-                    $label .= ' ' . strtoupper($color);
+                    $label .= ' ' . Tools::strtoupper(trim((string) $color));
                 }
 
                 // Get or Create Attribute
                 $id_attribute = $this->getAttribute($id_attribute_group, $label, $id_shop);
                 // Get or Create Product Attribute
                 $id_product_attribute = $this->getProductAttribute($id_product, $id_attribute, $weightKgTotal, $priceHt, $id_shop);
-                
+
                 if (!$id_product_attribute) {
                     throw new Exception($this->trans('Impossible d’ajouter au panier.', [], 'Modules.ps_custom_product.Front'));
                 }
-                
+
                 $addToCart = $this->addToCart($id_product, $id_product_attribute, $quantity);
                 if (!$addToCart) {
                     throw new Exception($this->trans('Impossible d’ajouter au panier.', [], 'Modules.ps_custom_product.Front'));
                 }
 
-                die(json_encode([
+                exit(json_encode([
                     'success' => true,
                     'action'  => 'add',
                     'id_product' => $id_product,
@@ -113,11 +141,10 @@ class Ps_Custom_ProductGetCustomProductModuleFrontController extends ModuleFront
                     'quantity' => $quantity,
 
                 ]));
-
             }
         } catch (Exception $e) {
             http_response_code(400);
-            die(json_encode([
+            exit(json_encode([
                 'success' => false,
                 'error' => $e->getMessage(),
             ]));
@@ -132,7 +159,7 @@ class Ps_Custom_ProductGetCustomProductModuleFrontController extends ModuleFront
             $this->context->cookie->id_cart = (int)$this->context->cart->id;
         }
         // Add Product Attribute to Cart
-        $add =(bool) $this->context->cart->updateQty(
+        $add = (bool) $this->context->cart->updateQty(
             (int)($quantity),
             (int)$id_product,
             (int)$id_product_attribute,
@@ -151,12 +178,12 @@ class Ps_Custom_ProductGetCustomProductModuleFrontController extends ModuleFront
         // Exist ? Get
         $id_product_attribute = (int)Db::getInstance()->getValue(
             'SELECT pa.id_product_attribute
-            FROM '._DB_PREFIX_.'product_attribute pa
-            JOIN '._DB_PREFIX_.'product_attribute_combination pac
+            FROM ' . _DB_PREFIX_ . 'product_attribute pa
+            JOIN ' . _DB_PREFIX_ . 'product_attribute_combination pac
             ON pac.id_product_attribute = pa.id_product_attribute
-            WHERE pa.id_product='.(int)$id_product.'
+            WHERE pa.id_product=' . (int)$id_product . '
             GROUP BY pa.id_product_attribute
-            HAVING GROUP_CONCAT(pac.id_attribute ORDER BY pac.id_attribute SEPARATOR ",") = "'.pSQL((string)$id_attribute).'"'
+            HAVING GROUP_CONCAT(pac.id_attribute ORDER BY pac.id_attribute SEPARATOR ",") = "' . pSQL((string)$id_attribute) . '"'
         );
 
         // Create
@@ -198,9 +225,9 @@ class Ps_Custom_ProductGetCustomProductModuleFrontController extends ModuleFront
                 'out_of_stock'         => 1,
             ]);
             // Specific_price
-             Db::getInstance()->delete(
+            Db::getInstance()->delete(
                 'specific_price',
-                'id_product='.(int)$id_product.' AND id_product_attribute='.(int)$id_product_attribute
+                'id_product=' . (int)$id_product . ' AND id_product_attribute=' . (int)$id_product_attribute
             );
 
             $sp = new SpecificPrice();
@@ -222,7 +249,7 @@ class Ps_Custom_ProductGetCustomProductModuleFrontController extends ModuleFront
             StockAvailable::setProductOutOfStock((int)$id_product, 1);
             Product::flushPriceCache();
         }
-       
+
         return $id_product_attribute;
     }
 
@@ -230,12 +257,12 @@ class Ps_Custom_ProductGetCustomProductModuleFrontController extends ModuleFront
     {
         // Exist ??
         $id_attribute = (int)Db::getInstance()->getValue(
-            'SELECT id_attribute FROM '._DB_PREFIX_.'attribute_lang 
+            'SELECT id_attribute FROM ' . _DB_PREFIX_ . 'attribute_lang 
             WHERE name = "' . pSQL($label) . '"'
         );
-        if($id_attribute > 0) {
+        if ($id_attribute > 0) {
             return $id_attribute;
-        }       
+        }
         // Attribute
         $result = Db::getInstance()->insert('attribute', [
             'id_attribute_group' => $id_attribute_group,
@@ -261,20 +288,20 @@ class Ps_Custom_ProductGetCustomProductModuleFrontController extends ModuleFront
         Db::getInstance()->insert('attribute_shop', [
             'id_attribute' => (int)$id_attribute,
             'id_shop'      => (int)$id_shop,
-        ]); 
+        ]);
 
         return $id_attribute;
     }
 
-    public function getSurface($shape, $dimensions = []) 
+    public function getSurface($shape, $dimensions = [])
     {
         // Get dimension
         $ab = (float)($dimensions['ab'] ?? 0);
-        $bc =(float)($dimensions['bc'] ?? 0);
-        $ca =(float)($dimensions['ca'] ?? 0);
+        $bc = (float)($dimensions['bc'] ?? 0);
+        $ca = (float)($dimensions['ca'] ?? 0);
 
         // Compute by shape
-        switch($shape) {
+        switch ($shape) {
             case 'RECT':
                 $surfaceM2 = max(0, ($ab / 100) * ($bc / 100));
                 break;
@@ -291,7 +318,7 @@ class Ps_Custom_ProductGetCustomProductModuleFrontController extends ModuleFront
                 $surfaceM2 = max(0, $surfaceM2);
                 break;
             default:
-                $surfaceM2 = 0;//error
+                $surfaceM2 = 0; //error
                 break;
         }
         return $surfaceM2;

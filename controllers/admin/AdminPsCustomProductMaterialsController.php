@@ -1,4 +1,22 @@
 <?php
+/**
+ * 2007-2025 PrestaShop.
+ *
+ * NOTICE OF LICENSE
+ *
+ * This source file is subject to the Academic Free License (AFL 3.0)
+ * that is bundled with this package in the file LICENSE.txt.
+ * It is also available through the world-wide-web at this URL:
+ * https://opensource.org/licenses/AFL-3.0
+ * If you did not receive a copy of the license and are unable to
+ * obtain it through the world-wide-web, please send an email
+ * to license@prestashop.com so we can send you a copy immediately.
+ *
+ * @author    Patrick Genitrini
+ * @copyright 2007-2025 PrestaShop SA and Contributors
+ * @license   https://opensource.org/licenses/AFL-3.0  Academic Free License (AFL 3.0)
+ */
+
 if (!defined('_PS_VERSION_')) { exit; }
 
 class AdminPsCustomProductMaterialsController extends ModuleAdminController
@@ -9,7 +27,7 @@ class AdminPsCustomProductMaterialsController extends ModuleAdminController
     {
         parent::__construct();
         $this->bootstrap = true;
-        $this->meta_title = $this->l('Matières & couleurs');
+        $this->meta_title = $this->trans('Matières & couleurs', [], 'Modules.ps_custom_product.Admin');
     }
 
     private function getDefault(): array
@@ -23,8 +41,12 @@ class AdminPsCustomProductMaterialsController extends ModuleAdminController
 
     private function nf($v): float
     {
-        if (is_string($v)) $v = str_replace(',', '.', $v);
-        if (!is_numeric($v)) return 0.0;
+        if (is_string($v)) {
+            $v = str_replace(',', '.', $v);
+        }
+        if (!is_numeric($v)) {
+            return 0.0;
+        }
         return round((float)$v, 3);
     }
 
@@ -39,12 +61,24 @@ class AdminPsCustomProductMaterialsController extends ModuleAdminController
         // convert en json valide en cas d'ancienne version de données #TODO other group
         foreach ($materials as &$m) {
             $m['enabled']            = isset($m['enabled']) ? (bool)$m['enabled'] : true;
-            if (!isset($m['coeff'])) $m['coeff'] = 1.0;
-            if (!isset($m['price_m2'])) $m['price_m2'] = 0.0;
-            if (!isset($m['weight_m2'])) $m['weight_m2'] = 0.0;
-            if (!isset($m['color_group_id'])) $m['color_group_id'] = 0;
-            if (!isset($m['color_default_coeff'])) $m['color_default_coeff'] = 1.0;
-            if (!isset($m['position'])) $m['position'] = 0;
+            if (!isset($m['coeff'])) {
+                $m['coeff'] = 1.0;
+            }
+            if (!isset($m['price_m2'])) {
+                $m['price_m2'] = 0.0;
+            }
+            if (!isset($m['weight_m2'])) {
+                $m['weight_m2'] = 0.0;
+            }
+            if (!isset($m['color_group_id'])) {
+                $m['color_group_id'] = 0;
+            }
+            if (!isset($m['color_default_coeff'])) {
+                $m['color_default_coeff'] = 1.0;
+            }
+            if (!isset($m['position'])) { 
+                $m['position'] = 0;
+            }
         }
         unset($m);
 
@@ -81,7 +115,7 @@ class AdminPsCustomProductMaterialsController extends ModuleAdminController
                 self::CONFIG_KEY,
                 json_encode($this->getDefault(), JSON_UNESCAPED_UNICODE|JSON_PRETTY_PRINT)
             );
-            $this->confirmations[] = $this->l('Configuration réinitialisée.');
+            $this->confirmations[] = $this->trans('Configuration réinitialisée.', [], 'Modules.ps_custom_product.Admin');
             return;
         }
 
@@ -90,7 +124,7 @@ class AdminPsCustomProductMaterialsController extends ModuleAdminController
             $materials = $stored ? json_decode($stored, true) : [];
             unset($materials[$del]);
             Configuration::updateValue(self::CONFIG_KEY, json_encode($materials, JSON_UNESCAPED_UNICODE|JSON_PRETTY_PRINT));
-            $this->confirmations[] = sprintf($this->l('Matière %s supprimée.'), $del);
+            $this->confirmations[] = $this->trans('Matière %s supprimée.', ['%s' => $del], 'Modules.Ps_custom_product.Admin');
             return;
         }
 
@@ -98,10 +132,14 @@ class AdminPsCustomProductMaterialsController extends ModuleAdminController
             // merge safe
             $stored = Configuration::get(self::CONFIG_KEY);
             $existing = $stored ? json_decode($stored, true) : $this->getDefault();
-            if (!is_array($existing)) $existing = [];
+            if (!is_array($existing)) {
+                $existing = [];
+            }
 
             $data = Tools::getValue('MATERIALS');
-            if (!is_array($data)) $data = [];
+            if (!is_array($data)) {
+                $data = [];
+            }
 
             foreach ($data as $key => $m) {
                 if ($key === 'new') {
@@ -133,7 +171,7 @@ class AdminPsCustomProductMaterialsController extends ModuleAdminController
             uasort($existing, fn($a, $b) => ($a['position'] ?? 0) <=> ($b['position'] ?? 0));
 
             Configuration::updateValue(self::CONFIG_KEY, json_encode($existing, JSON_UNESCAPED_UNICODE|JSON_PRETTY_PRINT));
-            $this->confirmations[] = $this->l('Matières enregistrées.');
+            $this->confirmations[] = $this->trans('Matières enregistrées.', [], 'Modules.ps_custom_product.Admin');
         }
     }
 }

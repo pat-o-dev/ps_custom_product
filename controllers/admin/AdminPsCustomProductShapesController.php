@@ -1,4 +1,22 @@
 <?php
+/**
+ * 2007-2025 PrestaShop.
+ *
+ * NOTICE OF LICENSE
+ *
+ * This source file is subject to the Academic Free License (AFL 3.0)
+ * that is bundled with this package in the file LICENSE.txt.
+ * It is also available through the world-wide-web at this URL:
+ * https://opensource.org/licenses/AFL-3.0
+ * If you did not receive a copy of the license and are unable to
+ * obtain it through the world-wide-web, please send an email
+ * to license@prestashop.com so we can send you a copy immediately.
+ *
+ * @author    Patrick Genitrini
+ * @copyright 2007-2025 PrestaShop SA and Contributors
+ * @license   https://opensource.org/licenses/AFL-3.0  Academic Free License (AFL 3.0)
+ */
+
 if (!defined('_PS_VERSION_')) { exit; }
 
 class AdminPsCustomProductShapesController extends ModuleAdminController
@@ -9,7 +27,7 @@ class AdminPsCustomProductShapesController extends ModuleAdminController
     {
         parent::__construct();
         $this->bootstrap = true;
-        $this->meta_title = $this->l('Formes & dimensions');
+        $this->meta_title = $this->trans('Formes & dimensions', [], 'Modules.ps_custom_product.Admin');
     }
 
     /** Valeurs par défaut */
@@ -85,7 +103,7 @@ class AdminPsCustomProductShapesController extends ModuleAdminController
                 self::CONFIG_KEY,
                 json_encode($this->getDefault(), JSON_UNESCAPED_UNICODE|JSON_PRETTY_PRINT)
             );
-            $this->confirmations[] = $this->l('Configuration réinitialisée.');
+            $this->confirmations[] = $this->trans('Configuration réinitialisée.', [], 'Modules.ps_custom_product.Admin');
             return;
         }
 
@@ -93,7 +111,7 @@ class AdminPsCustomProductShapesController extends ModuleAdminController
         if (Tools::isSubmit('submit_pcp_shapes')) {
             $input = Tools::getValue('PCP_SHAPES');
             if (!is_array($input) || empty($input)) {
-                $this->errors[] = $this->l('Aucune donnée reçue.');
+                $this->errors[] = $this->trans('Aucune donnée reçue.', [], 'Modules.ps_custom_product.Admin');
                 return;
             }
 
@@ -142,7 +160,7 @@ class AdminPsCustomProductShapesController extends ModuleAdminController
                 json_encode($out, JSON_UNESCAPED_UNICODE|JSON_PRETTY_PRINT)
             );
 
-            $this->confirmations[] = $this->l('Configuration enregistrée.');
+            $this->confirmations[] = $this->trans('Configuration enregistrée.', [], 'Modules.ps_custom_product.Admin');
         }
     }
 }

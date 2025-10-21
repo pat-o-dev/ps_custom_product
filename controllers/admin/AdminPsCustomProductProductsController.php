@@ -1,4 +1,22 @@
 <?php
+/**
+ * 2007-2025 PrestaShop.
+ *
+ * NOTICE OF LICENSE
+ *
+ * This source file is subject to the Academic Free License (AFL 3.0)
+ * that is bundled with this package in the file LICENSE.txt.
+ * It is also available through the world-wide-web at this URL:
+ * https://opensource.org/licenses/AFL-3.0
+ * If you did not receive a copy of the license and are unable to
+ * obtain it through the world-wide-web, please send an email
+ * to license@prestashop.com so we can send you a copy immediately.
+ *
+ * @author    Patrick Genitrini
+ * @copyright 2007-2025 PrestaShop SA and Contributors
+ * @license   https://opensource.org/licenses/AFL-3.0  Academic Free License (AFL 3.0)
+ */
+
 if (!defined('_PS_VERSION_')) { exit; }
 
 class AdminPsCustomProductProductsController extends ModuleAdminController
@@ -10,7 +28,7 @@ class AdminPsCustomProductProductsController extends ModuleAdminController
     {
         parent::__construct();
         $this->bootstrap = true;
-        $this->meta_title = $this->l('Produits');
+        $this->meta_title = $this->trans('Produits', [], 'Modules.ps_custom_product.Admin');
     }
 
     protected function getConfiguredProductIds(): array
@@ -67,7 +85,7 @@ class AdminPsCustomProductProductsController extends ModuleAdminController
                 ->from('product_lang', 'pl')
                 ->where('pl.id_product='.(int)$idProduct.' AND pl.id_lang='.(int)$idLang.' AND pl.id_shop='.(int)$this->context->shop->id)
         );
-        return $row['name'] ?? $this->l('(nom indisponible)');
+        return $row['name'] ?? $this->trans('(nom indisponible)', [], 'Modules.ps_custom_product.Admin');
     }
 
     /* ---------- Views ---------- */
@@ -83,14 +101,14 @@ class AdminPsCustomProductProductsController extends ModuleAdminController
     {
         $fields_form = [[
             'form' => [
-                'legend' => ['title' => $this->l('Ajouter un produit configurable')],
+                'legend' => ['title' => $this->trans('Ajouter un produit configurable', [], 'Modules.ps_custom_product.Admin')],
                 'input'  => [[
                     'type'  => 'text',
-                    'label' => $this->l('ID produit'),
+                    'label' => $this->trans('ID produit', [], 'Modules.ps_custom_product.Admin'),
                     'name'  => 'PCP_ADD_PRODUCT_ID',
-                    'desc'  => $this->l('Saisissez l’ID d’un produit existant et actif.'),
+                    'desc'  => $this->trans('Saisissez l’ID d’un produit existant et actif.', [], 'Modules.ps_custom_product.Admin'),
                 ]],
-                'submit' => ['title' => $this->l('Ajouter'), 'name' => 'submit_add_pcp_product'],
+                'submit' => ['title' => $this->trans('Ajouter', [], 'Modules.ps_custom_product.Admin'), 'name' => 'submit_add_pcp_product'],
             ],
         ]];
 
@@ -160,10 +178,10 @@ class AdminPsCustomProductProductsController extends ModuleAdminController
         // Ajouter un produit
         if (Tools::isSubmit('submit_add_pcp_product')) {
             $pid = (int)Tools::getValue('PCP_ADD_PRODUCT_ID');
-            if ($pid <= 0) { $this->errors[] = $this->l('ID produit invalide.'); return; }
+            if ($pid <= 0) { $this->errors[] = $this->trans('ID produit invalide.', [], 'Modules.ps_custom_product.Admin'); return; }
 
             $p = new Product($pid, false, (int)$this->context->language->id, (int)$this->context->shop->id);
-            if (!Validate::isLoadedObject($p)) { $this->errors[] = $this->l('Produit introuvable.'); return; }
+            if (!Validate::isLoadedObject($p)) { $this->errors[] = $this->trans('Produit introuvable.', [], 'Modules.ps_custom_product.Admin'); return; }
 
             $ids = $this->getConfiguredProductIds();
             if (!in_array($pid, $ids, true)) {
@@ -176,9 +194,9 @@ class AdminPsCustomProductProductsController extends ModuleAdminController
                     $this->saveSettings($settings);
                 }
 
-                $this->confirmations[] = $this->l('Produit ajouté à la liste.');
+                $this->confirmations[] = $this->trans('Produit ajouté à la liste.', [], 'Modules.ps_custom_product.Admin');
             } else {
-                $this->warnings[] = $this->l('Ce produit est déjà dans la liste.');
+                $this->warnings[] = $this->trans('Ce produit est déjà dans la liste.', [], 'Modules.ps_custom_product.Admin');
             }
         }
 
@@ -193,7 +211,7 @@ class AdminPsCustomProductProductsController extends ModuleAdminController
             $settings = $this->getSettings();
             if (isset($settings[$pid])) { unset($settings[$pid]); $this->saveSettings($settings); }
 
-            $this->confirmations[] = $this->l('Produit retiré.');
+            $this->confirmations[] = $this->trans('Produit retiré.', [], 'Modules.ps_custom_product.Admin');
         }
 
         // Reset des réglages produits (conserve la liste d’IDs)
@@ -204,7 +222,7 @@ class AdminPsCustomProductProductsController extends ModuleAdminController
                 $settings[$pid] = ['base_unit_price'=>0, 'tare_weight'=>0, 'rate_margin'=>1.0, 'id_attribute_group' => 0];
             }
             $this->saveSettings($settings);
-            $this->confirmations[] = $this->l('Réglages produits réinitialisés.');
+            $this->confirmations[] = $this->trans('Réglages produits réinitialisés.', [], 'Modules.ps_custom_product.Admin');
             return;
         }
 
@@ -232,7 +250,7 @@ class AdminPsCustomProductProductsController extends ModuleAdminController
             }
 
             $this->saveSettings($settings);
-            $this->confirmations[] = $this->l('Paramètres produits enregistrés.');
+            $this->confirmations[] = $this->trans('Paramètres produits enregistrés.', [], 'Modules.ps_custom_product.Admin');
         }
     }
 }

@@ -30,6 +30,7 @@ if (!defined('_PS_VERSION_')) {
 
 class Ps_custom_product extends Module
 {
+    
     protected $config_form = false;
 
     public function __construct()
@@ -44,7 +45,7 @@ class Ps_custom_product extends Module
         parent::__construct();
 
         $this->displayName = $this->trans('Custom Product', [], 'Modules.ps_custom_product.Admin');
-        $this->description = $this->trans('Add custom product on your website', [], 'Modules.ps_custom_product.Admin');
+        $this->description = $this->trans('Add Custom Product on your website', [], 'Modules.ps_custom_product.Admin');
 
         $this->ps_versions_compliancy = array('min' => '1.7', 'max' => _PS_VERSION_);
     }
@@ -75,7 +76,7 @@ class Ps_custom_product extends Module
     private function installTab()
     {
         $parent = new Tab();
-        $parent->active = 1;
+        $parent->active = true;
         $parent->class_name = 'AdminPsCustomProduct';
         $parent->name = [];
         foreach (Language::getLanguages(true) as $lang) {
@@ -91,7 +92,7 @@ class Ps_custom_product extends Module
         ];
         foreach ($children as $class => $label) {
             $tab = new Tab();
-            $tab->active = 1;
+            $tab->active = true;
             $tab->class_name = $class;
             $tab->id_parent = (int)$parent->id;
             $tab->module = $this->name;
@@ -165,7 +166,7 @@ class Ps_custom_product extends Module
             // Get colors List
             $colors = [];
             foreach($materials as &$material) {
-                $material['colors'] = $colors[$material['color_group_id']] ?? $this->getColorsByGroup($material['color_group_id'], $id_lang);   
+                $material['colors'] = $colors[$material['color_group_id']] ?? $this->getColorsByGroup($material['color_group_id'], $id_lang);
             }
  
             $this->context->smarty->assign([
@@ -180,32 +181,7 @@ class Ps_custom_product extends Module
 
 
     public function hookDisplayAfterProductThumbs($params) {
-        return null;
-        $id_product = $params['product']['id'];
-        // Is Product Page ?
-        if (!$id_product) return;
-        
-        $ids_product = array_map('intval',explode(',', (string) Configuration::get('PCP_CONFIG_PRODUCTS')));
-        // Is Custom Product ?
-        if(in_array($id_product, $ids_product)) {
-            $id_lang = (int) $this->context->language->id;
-            
-            $shapes = json_decode(Configuration::get('PCP_SHAPES', '{}'), true);
-            $materials = json_decode(Configuration::get('PCP_MATERIALS', '{}'), true);
-            // Get colors List
-            $colors = [];
-            foreach($materials as &$material) {
-                $material['colors'] = $colors[$material['color_group_id']] ?? $this->getColorsByGroup($material['color_group_id'], $id_lang);   
-            }
- 
-            $this->context->smarty->assign([
-                'id_product' => $id_product,
-                'shapes' => $shapes,
-                'materials' => $materials,
-            ]);
-            return $this->context->smarty->fetch('module:'.$this->name.'/views/templates/hook/customize_product.tpl');
-        }
-        return null; 
+
     }
 
     public function getContent()

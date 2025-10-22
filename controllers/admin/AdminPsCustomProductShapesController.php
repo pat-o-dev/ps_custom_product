@@ -17,11 +17,13 @@
  * @license   https://opensource.org/licenses/AFL-3.0  Academic Free License (AFL 3.0)
  */
 
-if (!defined('_PS_VERSION_')) { exit; }
+if (!defined('_PS_VERSION_')) {
+    exit;
+}
 
 class AdminPsCustomProductShapesController extends ModuleAdminController
 {
-    const CONFIG_KEY = 'PCP_SHAPES';
+    public const CONFIG_KEY = 'PCP_SHAPES';
 
     public function __construct()
     {
@@ -39,30 +41,30 @@ class AdminPsCustomProductShapesController extends ModuleAdminController
                 'enabled' => true,
                 'factor' => 1.0,
                 'fields' => [
-                    'ab'  => ['min'=>10, 'max'=>200, 'step'=>1, 'default' => 50],
-                    'bc' => ['min'=>10, 'max'=>200, 'step'=>1, 'default' => 50],
+                    'ab' => ['min' => 10, 'max' => 200, 'step' => 1, 'default' => 50],
+                    'bc' => ['min' => 10, 'max' => 200, 'step' => 1, 'default' => 50],
                 ],
-                'air' => ['min_m2'=>0.1, 'max_m2'=>1.9],
+                'air' => ['min_m2' => 0.1, 'max_m2' => 1.9],
             ],
             'SQR' => [
                 'label' => 'Carré',
                 'enabled' => true,
                 'factor' => 1.0,
                 'fields' => [
-                    'ab' => ['min'=>10, 'max'=>150, 'step'=>1, 'default' => 50],
+                    'ab' => ['min' => 10, 'max' => 150, 'step' => 1, 'default' => 50],
                 ],
-                'air' => ['min_m2'=>0.1, 'max_m2'=>2.0],
+                'air' => ['min_m2' => 0.1, 'max_m2' => 2.0],
             ],
             'TRI' => [
                 'label' => 'Triangle',
                 'enabled' => false,
                 'factor' => 0.5,
                 'fields' => [
-                    'ab' => ['min'=>10, 'max'=>200, 'step'=>1, 'default' => 50],
-                    'bc' => ['min'=>10, 'max'=>200, 'step'=>1, 'default' => 50],
-                    'ca' => ['min'=>10, 'max'=>200, 'step'=>1, 'default' => 50],
+                    'ab' => ['min' => 10, 'max' => 200, 'step' => 1, 'default' => 50],
+                    'bc' => ['min' => 10, 'max' => 200, 'step' => 1, 'default' => 50],
+                    'ca' => ['min' => 10, 'max' => 200, 'step' => 1, 'default' => 50],
                 ],
-                'air' => ['min_m2'=>0.1, 'max_m2'=>1.9],
+                'air' => ['min_m2' => 0.1, 'max_m2' => 1.9],
             ],
         ];
     }
@@ -70,9 +72,13 @@ class AdminPsCustomProductShapesController extends ModuleAdminController
     /** Parse nombre : "1,2" → 1.2 */
     private function nf($v): float
     {
-        if (is_string($v)) $v = str_replace(',', '.', $v);
-        if (!is_numeric($v)) return 0.0;
-        return round((float)$v, 3);
+        if (is_string($v)) {
+            $v = str_replace(',', '.', $v);
+        }
+        if (!is_numeric($v)) {
+            return 0.0;
+        }
+        return round((float) $v, 3);
     }
 
     public function initContent()
@@ -83,12 +89,12 @@ class AdminPsCustomProductShapesController extends ModuleAdminController
         $shapes = $stored ? json_decode($stored, true) : $this->getDefault();
 
         $this->context->smarty->assign([
-            'shapes'    => $shapes,
-            'reset_url' => self::$currentIndex.'&token='.$this->token.'&reset_pcp_shapes=1',
+            'shapes' => $shapes,
+            'reset_url' => self::$currentIndex.'&token=' . $this->token . '&reset_pcp_shapes=1',
         ]);
 
         $this->content = $this->context->smarty->fetch(
-            _PS_MODULE_DIR_.$this->module->name.'/views/templates/admin/shapes_form.tpl'
+            _PS_MODULE_DIR . $this->module->name . '/views/templates/admin/shapes_form.tpl'
         );
         $this->context->smarty->assign('content', $this->content);
     }
@@ -101,7 +107,7 @@ class AdminPsCustomProductShapesController extends ModuleAdminController
         if (Tools::isSubmit('reset_pcp_shapes')) {
             Configuration::updateValue(
                 self::CONFIG_KEY,
-                json_encode($this->getDefault(), JSON_UNESCAPED_UNICODE|JSON_PRETTY_PRINT)
+                json_encode($this->getDefault(), JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT)
             );
             $this->confirmations[] = $this->trans('Configuration réinitialisée.', [], 'Modules.ps_custom_product.Admin');
             return;
@@ -115,21 +121,23 @@ class AdminPsCustomProductShapesController extends ModuleAdminController
                 return;
             }
 
-            $stored   = Configuration::get(self::CONFIG_KEY);
+            $stored = Configuration::get(self::CONFIG_KEY);
             $existing = $stored ? json_decode($stored, true) : $this->getDefault();
-            if (!is_array($existing)) { $existing = []; }
+            if (!is_array($existing)) {
+                $existing = [];
+            }
 
             $out = [];
             foreach ($input as $code => $shape) {
                 $oldLabel = $existing[$code]['label'] ?? $code;
-                $label    = isset($shape['label']) ? trim($shape['label']) : $oldLabel;
+                $label = isset($shape['label']) ? trim($shape['label']) : $oldLabel;
 
                 $out[$code] = [
-                    'label'   => $label,
+                    'label' => $label,
                     'enabled' => !empty($shape['enabled']),
-                    'factor'  => $this->nf($shape['factor'] ?? 1),
-                    'fields'  => [],
-                    'air'     => [
+                    'factor' => $this->nf($shape['factor'] ?? 1),
+                    'fields' => [],
+                    'air' => [
                         'min_m2' => $this->nf($shape['air']['min_m2'] ?? 0),
                         'max_m2' => $this->nf($shape['air']['max_m2'] ?? 0),
                     ],
@@ -138,8 +146,8 @@ class AdminPsCustomProductShapesController extends ModuleAdminController
                 if (isset($shape['fields']) && is_array($shape['fields'])) {
                     foreach ($shape['fields'] as $fname => $f) {
                         $out[$code]['fields'][$fname] = [
-                            'min'  => $this->nf($f['min']  ?? 0),
-                            'max'  => $this->nf($f['max']  ?? 0),
+                            'min' => $this->nf($f['min']  ?? 0),
+                            'max' => $this->nf($f['max']  ?? 0),
                             'step' => $this->nf($f['step'] ?? 1),
                             'default' => $this->nf($f['default'] ?? 0),
                         ];
@@ -149,15 +157,17 @@ class AdminPsCustomProductShapesController extends ModuleAdminController
                 }
 
                 if ($out[$code]['air']['min_m2'] > $out[$code]['air']['max_m2']) {
-                    $this->errors[] = sprintf($this->l('%s : Aire min > Aire max'), $code);
+                    $this->errors[] = $this->trans('%s : Aire min > Aire max', ['%s' => $code], 'Modules.ps_custom_product.Admin');
                 }
             }
 
-            if (!empty($this->errors)) { return; }
+            if (!empty($this->errors)) {
+                return;
+            }
 
             Configuration::updateValue(
                 self::CONFIG_KEY,
-                json_encode($out, JSON_UNESCAPED_UNICODE|JSON_PRETTY_PRINT)
+                json_encode($out, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT)
             );
 
             $this->confirmations[] = $this->trans('Configuration enregistrée.', [], 'Modules.ps_custom_product.Admin');

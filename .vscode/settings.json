@@ -1,0 +1,10 @@
+{
+  "editor.formatOnSave": false,
+  "php-cs-fixer.autoFixOnSave": false,
+  "php-cs-fixer.onsave": false,
+  "prettier.disableLanguages": ["php"],
+  "[php]": { "editor.defaultFormatter": "junstyle.php-cs-fixer" },
+  "php.validate.executablePath": "/opt/homebrew/opt/php@8.2/bin/php",
+  "php-cs-fixer.executablePath": "/Users/patrickg/.composer/vendor/bin/php-cs-fixer",
+  "php-cs-fixer.phpExecutablePath": "/opt/homebrew/opt/php@8.2/bin/php"
+}

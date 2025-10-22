@@ -30,7 +30,6 @@ if (!defined('_PS_VERSION_')) {
 
 class Ps_custom_product extends Module
 {
-    
     protected $config_form = false;
 
     public function __construct()
@@ -72,7 +71,7 @@ class Ps_custom_product extends Module
             && Configuration::deleteByName('PCP_MATERIALS')
             && Configuration::deleteByName('PCP_SHAPES');
     }
-    
+
     private function installTab()
     {
         $parent = new Tab();
@@ -86,8 +85,8 @@ class Ps_custom_product extends Module
         $parent->module = $this->name;
         $parent->add();
         $children = [
-            'AdminPsCustomProductProducts'  => 'Produits configurables',
-            'AdminPsCustomProductShapes'    => 'Formes & dimensions',
+            'AdminPsCustomProductProducts' => 'Produits configurables',
+            'AdminPsCustomProductShapes' => 'Formes & dimensions',
             'AdminPsCustomProductMaterials' => 'Matières & Couleurs',
         ];
         foreach ($children as $class => $label) {
@@ -131,19 +130,19 @@ class Ps_custom_product extends Module
             // Load JS
             $this->context->controller->registerJavascript(
                 'pscp-front-js',
-                'modules/'.$this->name.'/views/js/ps_custom_product.js',
+                'modules/' . $this->name . '/views/js/ps_custom_product.js',
                 [
-                    'position'   => 'bottom',
-                    'priority'   => 150,
+                    'position' => 'bottom',
+                    'priority' => 150,
                     'attributes' => 'defer',
                 ]
             );
             // Load CSS
             $this->context->controller->registerStylesheet(
                 'pscp-front-css',
-                'modules/'.$this->name.'/views/css/ps_custom_product.css',
+                'modules/' . $this->name . '/views/css/ps_custom_product.css',
                 [
-                    'media'    => 'all',
+                    'media' => 'all',
                     'priority' => 150,
                 ]
             );
@@ -151,16 +150,19 @@ class Ps_custom_product extends Module
     }
 
 
-    public function hookDisplayProductConfigurator($params) {
+    public function hookDisplayProductConfigurator($params)
+    {
         $id_product = $params['product']['id'];
         // Is Product Page ?
-        if (!$id_product) return;
-        
-        $ids_product = array_map('intval',explode(',', (string) Configuration::get('PCP_CONFIG_PRODUCTS')));
+        if (!$id_product) {
+            return;
+        }
+
+        $ids_product = array_map('intval', explode(',', (string) Configuration::get('PCP_CONFIG_PRODUCTS')));
         // Is Custom Product ?
         if(in_array($id_product, $ids_product)) {
             $id_lang = (int) $this->context->language->id;
-            
+
             $shapes = json_decode(Configuration::get('PCP_SHAPES', '{}'), true);
             $materials = json_decode(Configuration::get('PCP_MATERIALS', '{}'), true);
             // Get colors List
@@ -168,7 +170,7 @@ class Ps_custom_product extends Module
             foreach($materials as &$material) {
                 $material['colors'] = $colors[$material['color_group_id']] ?? $this->getColorsByGroup($material['color_group_id'], $id_lang);
             }
- 
+
             $this->context->smarty->assign([
                 'id_product' => $id_product,
                 'shapes' => $shapes,
@@ -176,11 +178,12 @@ class Ps_custom_product extends Module
             ]);
             return $this->context->smarty->fetch('module:'.$this->name.'/views/templates/hook/customize_product.tpl');
         }
-        return null; 
+        return null;
     }
 
 
-    public function hookDisplayAfterProductThumbs($params) {
+    public function hookDisplayAfterProductThumbs($params)
+    {
 
     }
 

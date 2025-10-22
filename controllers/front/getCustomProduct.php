@@ -42,38 +42,58 @@ class Ps_Custom_ProductGetCustomProductModuleFrontController extends ModuleFront
             // Get data from fetch
             $input = json_decode(Tools::file_get_contents('php://input'), true);
 
-            $action = (string) $input['action'] ?? 'quote';
-            $id_product = (int) $input['id_product'] ?? 0;
-            $color = (int) $input['color'] ?? 0;
-            $materialCode = (string) $input['material'] ?? 0;
-            $shape = (string) $input['shape'] ?? null;
-            $quantity = (int) $input['quantity'] ?? 1;
-            $dimensions = $input['dimensions'] ?? [];
+            // INPUTS (safe defaults)
+            $action = isset($input['action']) ? (string) $input['action'] : 'quote';
+            $id_product = isset($input['id_product']) ? (int)    $input['id_product'] : 0;
+            $color = isset($input['color']) ? (int) $input['color'] : 0;
+            $materialCode = isset($input['material']) ? (string) $input['material'] : '';
+            $shape = isset($input['shape']) ? (string) $input['shape'] : '';
+            $quantity = isset($input['quantity']) ? (int) $input['quantity'] : 1;
+            $quantity = max(1, $quantity); // jamais < 1
+            $dimensions = (isset($input['dimensions']) && is_array($input['dimensions']))
+                        ? $input['dimensions'] : [];
 
-            // Load JSON setting
-            $shapes = json_decode(Configuration::get('PCP_SHAPES'), true) ?: [];
-            $materials = json_decode(Configuration::get('PCP_MATERIALS'), true) ?: [];
-            $productsSetting = json_decode(Configuration::get('PCP_PRODUCT_SETTINGS'), true) ?: [];
+            // JSON SETTINGS (arrays sûrs)
+            $shapes = json_decode((string) Configuration::get('PCP_SHAPES'), true);
+            if (!is_array($shapes)) {
+                $shapes = [];
+            }
 
-            // Init 
-            $shapeFactor = (float)($shapes[$shape]['factor'] ?? 1.0);
-            $material = $materials[$materialCode] ?? null;
-            $pricePerM2 = (float)($material['price_m2'] ?? 0);
-            $materialWeightM2 = (float)($material['weight_m2'] ?? 0);
-            $fabricCoeff = (float)($material['coeff'] ?? 1.0);
+            $materials = json_decode((string) Configuration::get('PCP_MATERIALS'), true);
+            if (!is_array($materials)) {
+                $materials = [];
+            }
 
-            $productSetting = $productsSetting[$id_product] ?? [];
-            $basePrice = (float)($productSetting['base_unit_price'] ?? 0);
-            $margin = (float)($productSetting['rate_margin'] ?? 1.0);
-            $id_attribute_group = (float)($productSetting['id_attribute_group'] ?? 0);
-            $productTare = (float) ($productSetting['tare_weight'] ?? 1.0);
+            $productsSetting = json_decode((string) Configuration::get('PCP_PRODUCT_SETTINGS'), true);
+            if (!is_array($productsSetting)) {
+                $productsSetting = [];
+            }
+
+            // DÉRIVÉS (avec guards)
+            $shapeFactor = (isset($shapes[$shape]) && is_array($shapes[$shape]) && isset($shapes[$shape]['factor']))
+                        ? (float) $shapes[$shape]['factor'] : 1.0;
+
+            $material    = (isset($materials[$materialCode]) && is_array($materials[$materialCode]))
+                        ? $materials[$materialCode] : null;
+
+            $pricePerM2       = ($material && isset($material['price_m2'])) ? (float) $material['price_m2'] : 0.0;
+            $materialWeightM2 = ($material && isset($material['weight_m2'])) ? (float) $material['weight_m2'] : 0.0;
+            $fabricCoeff = ($material && isset($material['coeff'])) ? (float) $material['coeff'] : 1.0;
+
+            $productSetting = (isset($productsSetting[$id_product]) && is_array($productsSetting[$id_product]))
+                            ? $productsSetting[$id_product] : [];
+
+            $basePrice = isset($productSetting['base_unit_price']) ? (float) $productSetting['base_unit_price'] : 0.0;
+            $margin            = isset($productSetting['rate_margin']) ? (float) $productSetting['rate_margin'] : 1.0;
+            $id_attribute_group = isset($productSetting['id_attribute_group']) ? (int)   $productSetting['id_attribute_group'] : 0;
+            $productTare       = isset($productSetting['tare_weight']) ? (float) $productSetting['tare_weight'] : 0.0;
 
             // Compute surface
             $surfaceM2 = $this->getSurface($shape, $dimensions);
             if ($surfaceM2 === 0) {
                 exit(json_encode([
                     'success' => false,
-                    'error'   => $this->trans('Forme inconnue ou dimensions invalides.', [], 'Modules.ps_custom_product.Front'),
+                    'error' => $this->trans('Forme inconnue ou dimensions invalides.', [], 'Modules.ps_custom_product.Front'),
                 ]));
             }
 
@@ -156,7 +176,7 @@ class Ps_Custom_ProductGetCustomProductModuleFrontController extends ModuleFront
         // Init cart if not exist
         if (!$this->context->cart->id) {
             $this->context->cart->add();
-            $this->context->cookie->id_cart = (int)$this->context->cart->id;
+            $this->context->cookie->id_cart = (int) $this->context->cart->id;
         }
         // Add Product Attribute to Cart
         $add = (bool) $this->context->cart->updateQty(
@@ -183,18 +203,19 @@ class Ps_Custom_ProductGetCustomProductModuleFrontController extends ModuleFront
             ON pac.id_product_attribute = pa.id_product_attribute
             WHERE pa.id_product=' . (int)$id_product . '
             GROUP BY pa.id_product_attribute
-            HAVING GROUP_CONCAT(pac.id_attribute ORDER BY pac.id_attribute SEPARATOR ",") = "' . pSQL((string)$id_attribute) . '"'
+            HAVING GROUP_CONCAT(pac.id_attribute ORDER BY pac.id_attribute SEPARATOR ",") = "' . pSQL((string) $id_attribute) . '"'
         );
 
         // Create
         if (!$id_product_attribute) {
             // Product_attribute
+            // impact HT = 0 use SpecificPrice
             Db::getInstance()->insert('product_attribute', [
-                'id_product'     => (int)$id_product,
-                'reference'      => '',        // #TODO SKU
-                'price'          => 0,         // impact HT = 0 use SpecificPrice
-                'weight'         => (float)$weightKgTotal,
-                'default_on'     => null,
+                'id_product' => (int) $id_product,
+                'reference' => '', 
+                'price' => 0,
+                'weight' => (float) $weightKgTotal,
+                'default_on' => null,
                 'available_date' => null,
             ], true);
 
@@ -202,51 +223,51 @@ class Ps_Custom_ProductGetCustomProductModuleFrontController extends ModuleFront
 
             // Product_attribute_shop
             Db::getInstance()->insert('product_attribute_shop', [
-                'id_product'           => (int)$id_product,
-                'id_product_attribute' => (int)$id_product_attribute,
-                'id_shop'              => (int)$id_shop,
-                'price'                => 0,
-                'weight'               => (float)$weightKgTotal,
-                'default_on'           => null,
-                'available_date'       => null,
+                'id_product' => (int) $id_product,
+                'id_product_attribute' => (int) $id_product_attribute,
+                'id_shop' => (int) $id_shop,
+                'price'  => 0,
+                'weight' => (float) $weightKgTotal,
+                'default_on' => null,
+                'available_date' => null,
             ], true);
             // Product_attribute_combination
             Db::getInstance()->insert('product_attribute_combination', [
-                'id_attribute'         => (int)$id_attribute,
-                'id_product_attribute' => (int)$id_product_attribute,
+                'id_attribute' => (int) $id_attribute,
+                'id_product_attribute' => (int) $id_product_attribute,
             ]);
 
             // Stock_available
             Db::getInstance()->insert('stock_available', [
-                'id_product'           => (int)$id_product,
-                'id_product_attribute' => (int)$id_product_attribute,
-                'id_shop'              => (int)$id_shop,
-                'quantity'             => 9999,
-                'out_of_stock'         => 1,
+                'id_product' => (int) $id_product,
+                'id_product_attribute' => (int) $id_product_attribute,
+                'id_shop' => (int) $id_shop,
+                'quantity' => 9999,
+                'out_of_stock' => 1,
             ]);
             // Specific_price
             Db::getInstance()->delete(
                 'specific_price',
-                'id_product=' . (int)$id_product . ' AND id_product_attribute=' . (int)$id_product_attribute
+                'id_product=' . (int)$id_product . ' AND id_product_attribute=' . (int) $id_product_attribute
             );
 
             $sp = new SpecificPrice();
-            $sp->id_product           = (int)$id_product;
-            $sp->id_product_attribute = (int)$id_product_attribute;
-            $sp->id_shop              = (int)$id_shop;
-            $sp->id_currency          = 0;
-            $sp->id_country           = 0;
-            $sp->id_group             = 0;
-            $sp->id_customer          = 0;
-            $sp->price                = Tools::ps_round($priceHt, 3); // PRIX HT FINAL
-            $sp->from_quantity        = 1;
-            $sp->reduction            = 0;
-            $sp->reduction_type       = 'amount';
-            $sp->from                 = '0000-00-00 00:00:00';
-            $sp->to                   = '0000-00-00 00:00:00';
+            $sp->id_product  = (int) $id_product;
+            $sp->id_product_attribute = (int) $id_product_attribute;
+            $sp->id_shop = (int) $id_shop;
+            $sp->id_currency = 0;
+            $sp->id_country = 0;
+            $sp->id_group = 0;
+            $sp->id_customer = 0;
+            $sp->price = Tools::ps_round($priceHt, 3); // PRIX HT FINAL
+            $sp->from_quantity = 1;
+            $sp->reduction = 0;
+            $sp->reduction_type = 'amount';
+            $sp->from = '0000-00-00 00:00:00';
+            $sp->to = '0000-00-00 00:00:00';
             $sp->add();
 
-            StockAvailable::setProductOutOfStock((int)$id_product, 1);
+            StockAvailable::setProductOutOfStock((int) $id_product, 1);
             Product::flushPriceCache();
         }
 
@@ -266,8 +287,8 @@ class Ps_Custom_ProductGetCustomProductModuleFrontController extends ModuleFront
         // Attribute
         $result = Db::getInstance()->insert('attribute', [
             'id_attribute_group' => $id_attribute_group,
-            'color'              => '',
-            'position'           => 0,
+            'color' => '',
+            'position' => 0,
         ]);
 
         if (!$result) {
@@ -278,16 +299,16 @@ class Ps_Custom_ProductGetCustomProductModuleFrontController extends ModuleFront
         // Attribute_lang
         foreach (Language::getLanguages(false) as $lang) {
             Db::getInstance()->insert('attribute_lang', [
-                'id_attribute' => (int)$id_attribute,
-                'id_lang'      => (int)$lang['id_lang'],
-                'name'         => pSQL($label),
+                'id_attribute' => (int) $id_attribute,
+                'id_lang' => (int) $lang['id_lang'],
+                'name' => pSQL($label),
             ]);
         }
 
         // Attribute_shop
         Db::getInstance()->insert('attribute_shop', [
-            'id_attribute' => (int)$id_attribute,
-            'id_shop'      => (int)$id_shop,
+            'id_attribute' => (int) $id_attribute,
+            'id_shop' => (int) $id_shop,
         ]);
 
         return $id_attribute;
@@ -296,9 +317,9 @@ class Ps_Custom_ProductGetCustomProductModuleFrontController extends ModuleFront
     public function getSurface($shape, $dimensions = [])
     {
         // Get dimension
-        $ab = (float)($dimensions['ab'] ?? 0);
-        $bc = (float)($dimensions['bc'] ?? 0);
-        $ca = (float)($dimensions['ca'] ?? 0);
+        $ab = (float) $dimensions['ab'];
+        $bc = (float) $dimensions['bc'];
+        $ca = (float) $dimensions['ca'];
 
         // Compute by shape
         switch ($shape) {
